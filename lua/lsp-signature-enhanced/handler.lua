@@ -2,7 +2,6 @@ local sig_popup = require("lsp-signature-enhanced.ui.signature_popup")
 local settings = require("lsp-signature-enhanced.settings").current
 local M = {}
 local util = require('vim.lsp.util')
-local clients = {}
 local last_signature = {}
 
 local modify_sig = function(sig_modifier, param_modifier)
@@ -13,7 +12,7 @@ local modify_sig = function(sig_modifier, param_modifier)
   vim.fn.timer_start(0, function()
     last_signature.activeSignature = last_signature.activeSignature + (sig_modifier or 0)
     last_signature.activeParameter = last_signature.activeParameter + (param_modifier or 0)
-    M.custom_signature_help(last_signature.err, last_signature, last_signature.ctx,
+    M.signature_handler(last_signature.err, last_signature, last_signature.ctx,
       last_signature.config)
   end)
 end
@@ -53,7 +52,6 @@ M.signature_handler = function(err, result, ctx, config)
   last_signature.ctx = ctx
   last_signature.config = config
 
-
   -- When use `autocmd CompleteDone <silent><buffer> lua vim.lsp.buf.signature_help()` to call signatureHelp handler
   -- If the completion item doesn't have signatures It will make noise. Change to use `print` that can use `<silent>` to ignore
   if not (result and result.signatures and result.signatures[1]) then
@@ -80,12 +78,12 @@ M.signature_handler = function(err, result, ctx, config)
   end
 
   -- TODO: Add all mapping and move to function add_mappings
-  sig_popup.add_mapping(last_signature.mode, 'sig_next', settings.keymaps.next_signature, modify_sig, 1, 0)
+  sig_popup.add_mapping(last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig, 1, 0)
 
   return fbuf, fwin
 end
 
-M.open_signature = function()
+M.open_signature = function(clients)
   local triggered = false
 
   for _, client in pairs(clients) do

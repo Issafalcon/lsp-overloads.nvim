@@ -27,7 +27,7 @@ function M.setup(client, config)
       if #active_clients < 1 then
         return
       end
-      signature.open_signature()
+      signature.open_signature(clients)
     end,
   })
 end
