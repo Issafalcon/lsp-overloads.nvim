@@ -1,14 +1,13 @@
 local M = {}
 local sig_popup_mappings = {}
 
-M.add_mapping = function(mode, mapName, default_lhs, rhs, ...)
-  local extra_args = ...
+M.add_mapping = function(mode, mapName, default_lhs, rhs, opts)
   local config_lhs = sig_popup_mappings[mapName] or default_lhs
   if config_lhs == nil then
     return
   end
   vim.keymap.set(mode, config_lhs, function()
-    rhs(extra_args)
+    rhs(opts)
   end, { buffer = true, expr = true, nowait = true })
   sig_popup_mappings.mapName = config_lhs
 end

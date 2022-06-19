@@ -18,7 +18,7 @@ local DEFAULT_SETTINGS = {
       next_signature = "<C-j>",
       previous_signature = "<C-k>",
       next_parameter = "<C-l>",
-      previous_paramter = "<C-h>",
+      previous_parameter = "<C-h>",
     },
   }
 }

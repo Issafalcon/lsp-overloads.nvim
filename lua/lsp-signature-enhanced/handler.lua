@@ -4,14 +4,14 @@ local M = {}
 local util = require('vim.lsp.util')
 local last_signature = {}
 
-local modify_sig = function(sig_modifier, param_modifier)
+local modify_sig = function(opts)
   -- Editing buffers is not allowed from <expr> mappings. The popup mappings are
   -- all <expr> mappings so they can be used consistently across modes, so instead
   -- of running the functions directly, they are run in an immediately executed
   -- timer callback.
   vim.fn.timer_start(0, function()
-    last_signature.activeSignature = last_signature.activeSignature + (sig_modifier or 0)
-    last_signature.activeParameter = last_signature.activeParameter + (param_modifier or 0)
+    last_signature.activeSignature = last_signature.activeSignature + (opts.sig_modifier or 0)
+    last_signature.activeParameter = last_signature.activeParameter + (opts.param_modifier or 0)
     M.signature_handler(last_signature.err, last_signature, last_signature.ctx,
       last_signature.config)
   end)
@@ -78,7 +78,10 @@ M.signature_handler = function(err, result, ctx, config)
   end
 
   -- TODO: Add all mapping and move to function add_mappings
-  sig_popup.add_mapping(last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig, 1, 0)
+  sig_popup.add_mapping(last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig, { sig_modifier = 1, param_modifier = 0})
+  sig_popup.add_mapping(last_signature.mode, 'sig_prev', settings.ui.keymaps.previous_signature, modify_sig, { sig_modifier = -1, param_modifier = 0})
+  sig_popup.add_mapping(last_signature.mode, 'param_next', settings.ui.keymaps.next_parameter, modify_sig, { sig_modifier = 0, param_modifier = 1})
+  sig_popup.add_mapping(last_signature.mode, 'param_prev', settings.ui.keymaps.previous_parameter, modify_sig, { sig_modifier = 0, param_modifier = -1})
 
   return fbuf, fwin
 end
