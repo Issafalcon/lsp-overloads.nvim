@@ -1,0 +1,12 @@
+*lsp-signature-enhanced.txt* lsp-signature-enhanced.nvim
+
+Provides enhanced handlers for the `textdocument/signatureHelper` LSP handler,
+with first class support for multiple signatures
+
+Author: Adam Figgins
+
+==============================================================================
+
+INTRODUCTION               *lsp-signature-enhanced.nvim* lsp-signature-enhanced*
+
+ vim:tw=78:ts=8:ft=help:norl:
