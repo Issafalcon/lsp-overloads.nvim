@@ -38,6 +38,10 @@ local check_trigger_char = function(line_to_cursor, triggers)
 end
 
 M.signature_handler = function(err, result, ctx, config)
+  if result == nil then
+    return
+  end
+
   config = config or {}
   config.focus_id = ctx.method
 
