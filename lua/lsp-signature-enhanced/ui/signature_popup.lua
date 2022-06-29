@@ -1,15 +1,41 @@
 local M = {}
+
+---@alias SignatureMaps table<string, string>
+
+---@alias PopupMappings table<string, SignatureMaps>
+
+---@type PopupMappings
 local sig_popup_mappings = {}
 
-M.add_mapping = function(mode, mapName, default_lhs, rhs, opts)
-  local config_lhs = sig_popup_mappings[mapName] or default_lhs
+M.add_mapping = function(bufnr, mode, mapName, default_lhs, rhs, opts)
+  if sig_popup_mappings[bufnr] == nil then
+    sig_popup_mappings[bufnr] = {}
+  end
+
+  local config_lhs = sig_popup_mappings[bufnr][mapName] or default_lhs
   if config_lhs == nil then
     return
   end
+
   vim.keymap.set(mode, config_lhs, function()
     rhs(opts)
-  end, { buffer = true, expr = true, nowait = true })
-  sig_popup_mappings.mapName = config_lhs
+  end, { buffer = bufnr, expr = true, nowait = true })
+
+  sig_popup_mappings[bufnr][mapName] = config_lhs
+end
+
+M.remove_mappings = function(bufnr, mode)
+  put("Inside remove mappings for bunf: " .. bufnr .. " and mode " .. mode)
+  put("Mappings: ")
+  put(sig_popup_mappings)
+
+  for _, buf_local_mappings in pairs(sig_popup_mappings) do
+    for _, value in pairs(buf_local_mappings) do
+      vim.keymap.del(mode, value, { buffer = bufnr, silent = true })
+    end
+  end
+
+  sig_popup_mappings = {}
 end
 
 --- Converts `textDocument/SignatureHelp` response to markdown lines.
@@ -50,7 +76,8 @@ M.convert_signature_help_to_markdown_lines = function(signature_help, ft, trigge
   end
 
   if #signature_help.signatures > 1 then
-    vim.list_extend(contents, { "(Overload " .. active_signature + 1 .. " of " .. #signature_help.signatures .. ")" , "" })
+    vim.list_extend(contents,
+      { "(Overload " .. active_signature + 1 .. " of " .. #signature_help.signatures .. ")", "" })
   end
 
   if signature.parameters and #signature.parameters > 0 then

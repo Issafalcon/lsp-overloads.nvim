@@ -37,6 +37,17 @@ local check_trigger_char = function(line_to_cursor, triggers)
   return false
 end
 
+local function add_mappings(bufnr)
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig,
+    { sig_modifier = 1, param_modifier = 0 })
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_prev', settings.ui.keymaps.previous_signature, modify_sig,
+    { sig_modifier = -1, param_modifier = 0 })
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_next', settings.ui.keymaps.next_parameter, modify_sig,
+    { sig_modifier = 0, param_modifier = 1 })
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_prev', settings.ui.keymaps.previous_parameter, modify_sig,
+    { sig_modifier = 0, param_modifier = -1 })
+end
+
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
     return
@@ -80,12 +91,17 @@ M.signature_handler = function(err, result, ctx, config)
   if hl then
     vim.api.nvim_buf_add_highlight(fbuf, -1, 'LspSignatureActiveParameter', 0, unpack(hl))
   end
+  local bufnr = vim.api.nvim_get_current_buf()
 
-  -- TODO: Add all mapping and move to function add_mappings
-  sig_popup.add_mapping(last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig, { sig_modifier = 1, param_modifier = 0})
-  sig_popup.add_mapping(last_signature.mode, 'sig_prev', settings.ui.keymaps.previous_signature, modify_sig, { sig_modifier = -1, param_modifier = 0})
-  sig_popup.add_mapping(last_signature.mode, 'param_next', settings.ui.keymaps.next_parameter, modify_sig, { sig_modifier = 0, param_modifier = 1})
-  sig_popup.add_mapping(last_signature.mode, 'param_prev', settings.ui.keymaps.previous_parameter, modify_sig, { sig_modifier = 0, param_modifier = -1})
+  local augroup = 'lsp_enhanced_sig_popup_' .. fwin
+  vim.cmd(string.format([[
+    augroup %s
+      autocmd!
+      autocmd WinClosed <amatch=%d> lua require("lsp-signature-enhanced.ui.signature_popup").remove_mappings(%d, %s)
+    augroup end
+  ]], augroup, fwin, bufnr, last_signature.mode))
+
+  add_mappings(bufnr)
 
   return fbuf, fwin
 end
