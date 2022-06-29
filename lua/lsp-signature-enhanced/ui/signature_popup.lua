@@ -1,7 +1,10 @@
 local M = {}
 local sig_popup_mappings = {}
+local popup = {
+  mappings = {}
+}
 
-M.add_mapping = function(mode, mapName, default_lhs, rhs, opts)
+M.add_mapping = function(bufnr, mode, mapName, default_lhs, rhs, opts)
   local config_lhs = sig_popup_mappings[mapName] or default_lhs
   if config_lhs == nil then
     return

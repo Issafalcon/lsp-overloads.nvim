@@ -1,5 +1,6 @@
 ---@module "lsp-signature-enhanced.settings"
 local settings = require("lsp-signature-enhanced.settings")
+---@module "lsp-signature-enhanced.handler"
 local signature = require("lsp-signature-enhanced.handler")
 local M = {}
 

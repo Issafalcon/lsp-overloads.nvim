@@ -1,8 +1,8 @@
 local sig_popup = require("lsp-signature-enhanced.ui.signature_popup")
-local settings = require("lsp-signature-enhanced.settings").current
-local M = {}
+local settings = require("lsp-signature-enhanced.settings")
 local util = require('vim.lsp.util')
-local last_signature = {}
+
+local M = {}
 
 local modify_sig = function(opts)
   -- Editing buffers is not allowed from <expr> mappings. The popup mappings are
@@ -10,10 +10,10 @@ local modify_sig = function(opts)
   -- of running the functions directly, they are run in an immediately executed
   -- timer callback.
   vim.fn.timer_start(0, function()
-    last_signature.activeSignature = last_signature.activeSignature + (opts.sig_modifier or 0)
-    last_signature.activeParameter = last_signature.activeParameter + (opts.param_modifier or 0)
-    M.signature_handler(last_signature.err, last_signature, last_signature.ctx,
-      last_signature.config)
+    opts.last_sig.activeSignature = opts.last_sig.activeSignature + (opts.sig_modifier or 0)
+    opts.last_sig.activeParameter = opts.last_sig.activeParameter + (opts.param_modifier or 0)
+    M.signature_handler(opts.last_sig.err, opts.last_sig, opts.last_sig.ctx,
+      opts.last_sig.config)
   end)
 end
 
@@ -36,6 +36,8 @@ local check_trigger_char = function(line_to_cursor, triggers)
   end
   return false
 end
+
+local last_signature = {}
 
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
@@ -76,22 +78,45 @@ M.signature_handler = function(err, result, ctx, config)
     end
     return
   end
+
   local fbuf, fwin = vim.lsp.util.open_floating_preview(lines, 'markdown', config)
+  local bufnr = vim.nvim_get_current_buf()
+
+  local augroup = 'lsp_enhanced_sig_popup_' .. fwin
+  vim.cmd(string.format([[
+    augroup %s
+      autocmd!
+      autocmd WinLeave * if %d == <amatch> lua require("lsp-signature-enhanced.ui.signature_popup").remove_mappings(%d) endif
+    augroup end
+  ]], augroup, fwin, vim.api.nvim_get_current_buf()))
+
   if hl then
     vim.api.nvim_buf_add_highlight(fbuf, -1, 'LspSignatureActiveParameter', 0, unpack(hl))
   end
 
-  -- TODO: Add all mapping and move to function add_mappings
-  sig_popup.add_mapping(last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig, { sig_modifier = 1, param_modifier = 0})
-  sig_popup.add_mapping(last_signature.mode, 'sig_prev', settings.ui.keymaps.previous_signature, modify_sig, { sig_modifier = -1, param_modifier = 0})
-  sig_popup.add_mapping(last_signature.mode, 'param_next', settings.ui.keymaps.next_parameter, modify_sig, { sig_modifier = 0, param_modifier = 1})
-  sig_popup.add_mapping(last_signature.mode, 'param_prev', settings.ui.keymaps.previous_parameter, modify_sig, { sig_modifier = 0, param_modifier = -1})
 
-  return fbuf, fwin
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig, { sig_modifier = 1, param_modifier = 0 })
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_prev', settings.ui.keymaps.previous_signature, modify_sig, { sig_modifier = -1, param_modifier = 0 })
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_next', settings.ui.keymaps.next_parameter, modify_sig, { sig_modifier = 0, param_modifier = 1 })
+  sig_popup.add_mapping(last_signature.mode, 'param_prev', settings.ui.keymaps.previous_parameter, modify_sig, { sig_modifier = 0, param_modifier = -1 })
 end
 
-M.open_signature = function(clients)
-  local triggered = false
+local modify_sig = function(opts)
+  -- Editing buffers is not allowed from <expr> mappings. The popup mappings are
+  -- all <expr> mappings so they can be used consistently across modes, so instead
+  -- of running the functions directly, they are run in an immediately executed
+  -- timer callback.
+  vim.fn.timer_start(0, function()
+    opts.last_sig.activeSignature = opts.last_sig.activeSignature + (opts.sig_modifier or 0)
+    opts.last_sig.activeParameter = opts.last_sig.activeParameter + (opts.param_modifier or 0)
+    M.signature_handler(opts.last_sig.err, opts.last_sig, opts.last_sig.ctx,
+      opts.last_sig.config)
+  end)
+end
+
+return fbuf, fwin
+
+
 
   for _, client in pairs(clients) do
     local triggers = client.server_capabilities.signatureHelpProvider.triggerCharacters
