@@ -1,5 +1,5 @@
-local sig_popup = require("lsp-signature-enhanced.ui.signature_popup")
-local settings = require("lsp-signature-enhanced.settings").current
+local sig_popup = require("lsp-overloads.ui.signature_popup")
+local settings = require("lsp-overloads.settings").current
 local M = {}
 local util = require('vim.lsp.util')
 local last_signature = {}
@@ -37,7 +37,7 @@ local check_trigger_char = function(line_to_cursor, triggers)
   return false
 end
 
-local function add_mappings(bufnr)
+local function add_signature_mappings(bufnr)
   sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig,
     { sig_modifier = 1, param_modifier = 0 })
   sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_prev', settings.ui.keymaps.previous_signature, modify_sig,
@@ -98,13 +98,13 @@ M.signature_handler = function(err, result, ctx, config)
     group = augroup,
     pattern = tostring(fwin),
     callback = function ()
-      local signature_popup = require("lsp-signature-enhanced.ui.signature_popup")
+      local signature_popup = require("lsp-overloads.ui.signature_popup")
       signature_popup.remove_mappings(bufnr, last_signature.mode)
       vim.api.nvim_del_augroup_by_id(augroup)
     end
   })
 
-  add_mappings(bufnr)
+  add_signature_mappings(bufnr)
 
   return fbuf, fwin
 end

@@ -1,13 +1,13 @@
----@module "lsp-signature-enhanced.settings"
-local settings = require("lsp-signature-enhanced.settings")
-local signature = require("lsp-signature-enhanced.handler")
+---@module "lsp-overloads.settings"
+local settings = require("lsp-overloads.settings")
+local signature = require("lsp-overloads.handler")
 local M = {}
 
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 local clients = {}
 
----@param config LspSignatureEnhancedSettings
+---@param config LspOverloadsSettings
 function M.setup(client, config)
   if config then
     settings.set(config)
