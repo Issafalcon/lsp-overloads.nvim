@@ -63,7 +63,7 @@ M.signature_handler = function(err, result, ctx, config)
   -- Store the new result in state so we can move between overloads and params
   last_signature = result
   last_signature.err = err
-  last_signature.mode = vim.fn.mode()
+  last_signature.mode = vim.api.nvim_get_mode()["mode"]
   last_signature.ctx = ctx
   last_signature.config = config
 
@@ -93,13 +93,14 @@ M.signature_handler = function(err, result, ctx, config)
   end
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local augroup = 'lsp_enhanced_sig_popup_' .. fwin
-  vim.cmd(string.format([[
-    augroup %s
-      autocmd!
-      autocmd WinClosed <amatch=%d> lua require("lsp-signature-enhanced.ui.signature_popup").remove_mappings(%d, %s)
-    augroup end
-  ]], augroup, fwin, bufnr, last_signature.mode))
+  local augroup = vim.api.nvim_create_augroup('lsp_enhanced_sig_popup_' .. fwin, { clear = false})
+  vim.api.nvim_create_autocmd('WinClosed', {
+    group = augroup,
+    pattern = tostring(fwin),
+    callback = function ()
+      require("lsp-signature-enhanced.ui.signature_popup").remove_mappings(bufnr, last_signature.mode)
+    end
+  })
 
   add_mappings(bufnr)
 
