@@ -1,6 +1,6 @@
 ---@module "lsp-overloads.settings"
 local settings = require("lsp-overloads.settings")
-local signature = require("lsp-overloads.handler")
+local signature = require("lsp-overloads.handlers")
 local M = {}
 
 local augroup = vim.api.nvim_create_augroup
