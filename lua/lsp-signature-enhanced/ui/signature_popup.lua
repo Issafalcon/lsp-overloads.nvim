@@ -25,14 +25,8 @@ M.add_mapping = function(bufnr, mode, mapName, default_lhs, rhs, opts)
 end
 
 M.remove_mappings = function(bufnr, mode)
-  put("Inside remove mappings for bunf: " .. bufnr .. " and mode ")
-  put(mode)
-  put("Mappings: ")
-  put(sig_popup_mappings)
-
   for _, buf_local_mappings in pairs(sig_popup_mappings) do
     for _, value in pairs(buf_local_mappings) do
-      put("Deleting mapping in mode " .. mode .. " with value " .. value)
       vim.keymap.del(mode, value, { buffer = bufnr, silent = true })
     end
   end

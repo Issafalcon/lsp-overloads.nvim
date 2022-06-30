@@ -93,12 +93,14 @@ M.signature_handler = function(err, result, ctx, config)
   end
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local augroup = vim.api.nvim_create_augroup('lsp_enhanced_sig_popup_' .. fwin, { clear = false})
+  local augroup = vim.api.nvim_create_augroup('LspSignature_popup_' .. fwin, { clear = false})
   vim.api.nvim_create_autocmd('WinClosed', {
     group = augroup,
     pattern = tostring(fwin),
     callback = function ()
-      require("lsp-signature-enhanced.ui.signature_popup").remove_mappings(bufnr, last_signature.mode)
+      local signature_popup = require("lsp-signature-enhanced.ui.signature_popup")
+      signature_popup.remove_mappings(bufnr, last_signature.mode)
+      vim.api.nvim_del_augroup_by_id(augroup)
     end
   })
 
