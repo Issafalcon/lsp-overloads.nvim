@@ -7,6 +7,12 @@ local M = {}
 ---@type PopupMappings
 local sig_popup_mappings = {}
 
+---@param bufnr number The buffer number of the active buffer
+---@param mode '"i"'|'"n"'|'"v"'|'"x"' The vim mode to apply the mapping to
+---@param mapName string The unique name of the mapping
+---@param default_lhs string The key presses required to trigger the mapping
+---@param rhs fun(opts?: table): nil The function to execute when mapping is triggers
+---@param opts? table The options to pass to the rhs function
 M.add_mapping = function(bufnr, mode, mapName, default_lhs, rhs, opts)
   if sig_popup_mappings[bufnr] == nil then
     sig_popup_mappings[bufnr] = {}
@@ -24,6 +30,8 @@ M.add_mapping = function(bufnr, mode, mapName, default_lhs, rhs, opts)
   sig_popup_mappings[bufnr][mapName] = config_lhs
 end
 
+---@param bufnr number The buffer number of the active buffer
+---@param mode '"i"'|'"n"'|'"v"'|'"x"' The mode to which the original mapping was applied to
 M.remove_mappings = function(bufnr, mode)
   for _, buf_local_mappings in pairs(sig_popup_mappings) do
     for _, value in pairs(buf_local_mappings) do
@@ -36,9 +44,9 @@ end
 
 --- Converts `textDocument/SignatureHelp` response to markdown lines.
 ---
----@param signature_help Response of `textDocument/SignatureHelp`
----@param ft optional filetype that will be use as the `lang` for the label markdown code block
----@param triggers optional list of trigger characters from the lsp server. used to better determine parameter offsets
+---@param signature_help any Response of `textDocument/SignatureHelp`
+---@param ft? string optional filetype that will be use as the `lang` for the label markdown code block
+---@param triggers? table<string> optional list of trigger characters from the lsp server. used to better determine parameter offsets
 ---@returns list of lines of converted markdown.
 ---@see https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp
 M.convert_signature_help_to_markdown_lines = function(signature_help, ft, triggers)

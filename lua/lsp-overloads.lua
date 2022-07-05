@@ -1,13 +1,15 @@
 ---@module "lsp-overloads.settings"
 local settings = require("lsp-overloads.settings")
-local signature = require("lsp-overloads.handlers")
+---@module "lsp-overloads.handlers"
+local handlers = require("lsp-overloads.handlers")
 local M = {}
 
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 local clients = {}
 
----@param config LspOverloadsSettings
+---@param config LspOverloadsSettings The settings for the lsp-overload plugin
+---@param client any The |vim.lsp.client| instance to extend the handlers for
 function M.setup(client, config)
   if config then
     settings.set(config)
@@ -27,7 +29,7 @@ function M.setup(client, config)
       if #active_clients < 1 then
         return
       end
-      signature.open_signature(clients)
+      handlers.open_signature(clients)
     end,
   })
 end

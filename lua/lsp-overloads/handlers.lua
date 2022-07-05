@@ -1,7 +1,9 @@
+---@module "lsp-overloads.ui.signature_popup"
 local sig_popup = require("lsp-overloads.ui.signature_popup")
-local settings = require("lsp-overloads.settings").current
+---@module "lsp-overloads.settings"
+local settings = require("lsp-overloads.settings")
+
 local M = {}
-local util = require('vim.lsp.util')
 local last_signature = {}
 
 local modify_sig = function(opts)
@@ -38,13 +40,13 @@ local check_trigger_char = function(line_to_cursor, triggers)
 end
 
 local function add_signature_mappings(bufnr)
-  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_next', settings.ui.keymaps.next_signature, modify_sig,
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_next', settings.current.keymaps.next_signature, modify_sig,
     { sig_modifier = 1, param_modifier = 0 })
-  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_prev', settings.ui.keymaps.previous_signature, modify_sig,
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'sig_prev', settings.current.keymaps.previous_signature, modify_sig,
     { sig_modifier = -1, param_modifier = 0 })
-  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_next', settings.ui.keymaps.next_parameter, modify_sig,
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_next', settings.current.keymaps.next_parameter, modify_sig,
     { sig_modifier = 0, param_modifier = 1 })
-  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_prev', settings.ui.keymaps.previous_parameter, modify_sig,
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_prev', settings.current.keymaps.previous_parameter, modify_sig,
     { sig_modifier = 0, param_modifier = -1 })
 end
 
@@ -70,6 +72,7 @@ M.signature_handler = function(err, result, ctx, config)
   -- When use `autocmd CompleteDone <silent><buffer> lua vim.lsp.buf.signature_help()` to call signatureHelp handler
   -- If the completion item doesn't have signatures It will make noise. Change to use `print` that can use `<silent>` to ignore
   if not (result and result.signatures and result.signatures[1]) then
+    ---@param err any
     if config.silent ~= true then
       print('No signature help available')
     end
@@ -130,13 +133,13 @@ M.open_signature = function(clients)
   end
 
   if triggered then
-    local params = util.make_position_params()
+    local params = vim.lsp.util.make_position_params()
     vim.lsp.buf_request(
       0,
       'textDocument/signatureHelp',
       params,
       vim.lsp.with(M.signature_handler, {
-        border = 'single',
+        border = settings.current.ui.border,
         silent = true,
         focusable = false,
       }))
