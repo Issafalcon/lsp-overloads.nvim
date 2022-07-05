@@ -43,6 +43,7 @@ M.remove_mappings = function(bufnr, mode)
 end
 
 --- Converts `textDocument/SignatureHelp` response to markdown lines.
+--- Modified code from https://github.com/neovim/neovim/blob/41785b1b0cd8b54700110d0c83f599126b38a8c9/runtime/lua/vim/lsp/util.lua#L858
 ---
 ---@param signature_help any Response of `textDocument/SignatureHelp`
 ---@param ft? string optional filetype that will be use as the `lang` for the label markdown code block

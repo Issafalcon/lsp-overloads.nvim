@@ -65,6 +65,7 @@ local function add_signature_mappings(bufnr)
     { sig_modifier = 0, param_modifier = -1 })
 end
 
+--- Modified code from https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
     return
