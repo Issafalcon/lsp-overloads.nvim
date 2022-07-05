@@ -12,8 +12,22 @@ local modify_sig = function(opts)
   -- of running the functions directly, they are run in an immediately executed
   -- timer callback.
   vim.fn.timer_start(0, function()
-    last_signature.activeSignature = last_signature.activeSignature + (opts.sig_modifier or 0)
-    last_signature.activeParameter = last_signature.activeParameter + (opts.param_modifier or 0)
+    local next_possible_sig_idx = last_signature.activeSignature + (opts.sig_modifier or 0)
+    local next_possible_param_idx = last_signature.activeParameter + (opts.param_modifier or 0)
+
+    if next_possible_sig_idx >= 0 and #last_signature.signatures - 1 >= next_possible_sig_idx then
+      last_signature.activeSignature = next_possible_sig_idx
+    end
+
+    if next_possible_param_idx >= 0
+        and
+        last_signature.signatures[last_signature.activeSignature + 1] ~= nil
+        and
+        (#last_signature.signatures[last_signature.activeSignature + 1].parameters - 1) >= next_possible_param_idx
+    then
+      last_signature.activeParameter = next_possible_param_idx
+    end
+
     M.signature_handler(last_signature.err, last_signature, last_signature.ctx,
       last_signature.config)
   end)
@@ -46,7 +60,8 @@ local function add_signature_mappings(bufnr)
     { sig_modifier = -1, param_modifier = 0 })
   sig_popup.add_mapping(bufnr, last_signature.mode, 'param_next', settings.current.keymaps.next_parameter, modify_sig,
     { sig_modifier = 0, param_modifier = 1 })
-  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_prev', settings.current.keymaps.previous_parameter, modify_sig,
+  sig_popup.add_mapping(bufnr, last_signature.mode, 'param_prev', settings.current.keymaps.previous_parameter, modify_sig
+    ,
     { sig_modifier = 0, param_modifier = -1 })
 end
 
@@ -96,11 +111,11 @@ M.signature_handler = function(err, result, ctx, config)
   end
   local bufnr = vim.api.nvim_get_current_buf()
 
-  local augroup = vim.api.nvim_create_augroup('LspSignature_popup_' .. fwin, { clear = false})
+  local augroup = vim.api.nvim_create_augroup('LspSignature_popup_' .. fwin, { clear = false })
   vim.api.nvim_create_autocmd('WinClosed', {
     group = augroup,
     pattern = tostring(fwin),
-    callback = function ()
+    callback = function()
       local signature_popup = require("lsp-overloads.ui.signature_popup")
       signature_popup.remove_mappings(bufnr, last_signature.mode)
       vim.api.nvim_del_augroup_by_id(augroup)

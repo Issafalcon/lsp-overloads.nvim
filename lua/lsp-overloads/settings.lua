@@ -31,7 +31,6 @@ M.current = M._DEFAULT_SETTINGS
 ---@param opts LspOverloadsSettings
 function M.set(opts)
   M.current = vim.tbl_deep_extend("force", M.current, opts)
-  put(M.current)
 end
 
 return M
