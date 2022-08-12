@@ -6,42 +6,53 @@ local settings = require("lsp-overloads.settings")
 local M = {}
 local last_signature = {}
 
+local function modify_active_param(param_mod)
+  local current_sig_index = last_signature.activeSignature + 1
+
+  if last_signature.activeParameter then
+    local next_possible_param_idx = last_signature.activeParameter + (param_mod or 0)
+
+    if next_possible_param_idx >= 0
+        and last_signature.signatures[current_sig_index] ~= nil
+        and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
+    then
+      last_signature.activeParameter = next_possible_param_idx
+    end
+  else
+    local next_possible_param_idx = last_signature.signatures[current_sig_index].activeParameter +
+        (param_mod or 0)
+    if next_possible_param_idx >= 0
+        and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
+    then
+      last_signature.signatures[current_sig_index].activeParameter = next_possible_param_idx
+    end
+  end
+end
+
+local function modify_active_signature(sig_mod)
+  if #last_signature.signatures == 1 then
+    return
+  else
+    local next_possible_sig_idx = last_signature.activeSignature + (sig_mod or 0)
+    if next_possible_sig_idx >= 0 and #last_signature.signatures - 1 >= next_possible_sig_idx then
+      last_signature.activeSignature = next_possible_sig_idx
+    end
+  end
+end
+
 local modify_sig = function(opts)
   -- Editing buffers is not allowed from <expr> mappings. The popup mappings are
   -- all <expr> mappings so they can be used consistently across modes, so instead
   -- of running the functions directly, they are run in an immediately executed
   -- timer callback.
   vim.fn.timer_start(0, function()
-    -- signatureHelp response is different depending on whether there is a single signature or multiple.
-    -- Currently it seems that activeSignature is ommitted when there is only one signature, and activeParameter is
-    -- only available in the nested signatures[0] object.
     -- See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelp
-    if last_signature.activeSignature == nil then
-      -- We only have one signature
-      local next_possible_param_idx = last_signature.signatures[1].activeParameter + (opts.param_modifier or 0)
-      if
-        next_possible_param_idx >= 0
-        and (#last_signature.signatures[1].parameters - 1) >= next_possible_param_idx
-      then
-        last_signature.signatures[1].activeParameter = next_possible_param_idx
-      end
-    else
-      -- We have multiple signatures
-      local next_possible_sig_idx = last_signature.activeSignature + (opts.sig_modifier or 0)
-      local next_possible_param_idx = last_signature.activeParameter + (opts.param_modifier or 0)
 
-      if next_possible_sig_idx >= 0 and #last_signature.signatures - 1 >= next_possible_sig_idx then
-        last_signature.activeSignature = next_possible_sig_idx
-      end
-
-      if
-        next_possible_param_idx >= 0
-        and last_signature.signatures[last_signature.activeSignature + 1] ~= nil
-        and (#last_signature.signatures[last_signature.activeSignature + 1].parameters - 1) >= next_possible_param_idx
-      then
-        last_signature.activeParameter = next_possible_param_idx
-      end
-    end
+    -- Set the root level active signature in case the LSP response doesn't provide one (it's an optional property according to the spec, but
+    -- we need it for the calculations)
+    last_signature.activeSignature = last_signature.activeSignature or 0
+    modify_active_signature(opts.sig_modifier)
+    modify_active_param(opts.param_modifier)
 
     M.signature_handler(last_signature.err, last_signature, last_signature.ctx, last_signature.config)
   end)
