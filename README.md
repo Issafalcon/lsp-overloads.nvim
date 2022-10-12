@@ -51,9 +51,19 @@ the built-in `signatureHelper` LSP handler:
   --- Guard against servers without the signatureHelper capability
   if client.server_capabilities.signatureHelpProvider then
     require('lsp-overloads').setup(client, {
+        -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
         ui = {
-          -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
-          border = "single"
+          border = "single"           -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
+          height = nil,               -- Height of the signature popup window (nil allows dynamic sizing based on content of the help)
+          width = nil,                -- Width of the signature popup window (nil allows dynamic sizing based on content of the help)
+          wrap = true,                -- Wrap long lines
+          wrap_at = nil,              -- Character to wrap at for computing height when wrap enabled
+          max_width = nil,            -- Maximum signature popup width
+          max_height = nil,           -- Maximum signature popup height
+          focusable = true,           -- Make the popup float focusable
+          focus = false,              -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
+          offset_x = 0,               -- Horizontal offset of the floating window relative to the cursor position
+          offset_y = 0                -- Vertical offset of the floating window relative to the cursor position
         },
         keymaps = {
           next_signature = "<C-j>",
@@ -87,20 +97,7 @@ The default mappings are used to navigate between various signature overloads an
 ### Additional Tips
 
 - Any calls to `vim.lsp.buf.signature_help()` made while the plugin's signature popup is displayed, will behave
-in the same way as the built-in signature popup (i.e. Cursor will enter the popup in normal mode, allowing scrolling behaviour)
-
-## Feature Roadmap
-
-  | Feature   | Status    |
-  |--------------- | --------------- |
-  | Overload Toggle   | :white_check_mark:   |
-  | Parameter Toggle   | :white_check_mark:   |
-  | Parameter Highlights in Signature Content Text   | :black_square_button:   |
-  | Plugin command to trigger the custom signature request manually | :black_square_button:   |
-  | Scrolling signature popup content without entering popup window   | :black_square_button:   |
-  | UI: Border customisation   | :white_check_mark:   |
-  | UI: Popup position customisation   | :black_square_button:   |
-
+in the same way as the built-in signature popup (i.e. When `focusable` set to true Cursor will enter the popup in normal mode, allowing scrolling behaviour)
 
 ## Credits
 
