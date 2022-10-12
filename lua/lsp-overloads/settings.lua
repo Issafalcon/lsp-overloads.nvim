@@ -8,6 +8,22 @@ local M = {}
 
 ---@class LspOverloadsUiOpts
 ---@field border '"none"'|'"single"'|'"double"'
+---@field height number | nil Height of the signature window
+---@field width number | nil Width of the signature window
+---@field wrap boolean Wrap long lines
+---@field wrap_at string | nil Character to wrap at for computing height when wrap enabled
+---@field max_width number | nil maximal width of floating window
+---@field max_height number | nil maximal height of floating window
+---@field pad_top number number of lines to pad contents at top
+---@field pad_bottom number number of lines to pad contents at bottom
+---@field focus_id string if a popup with this id is opened, then focus it
+---@field close_events table list of events that closes the floating window
+---@field focusable boolean Make float focusable
+---@field focus boolean If `true`, and if {focusable}
+---             is also `true`, focus an existing floating window with the same
+---             {focus_id}
+---@field offset_x number Horizontal offset of the floating window relative to the cursor position
+---@field offset_y number Vertical offset of the floating window relative to the cursor position
 
 ---@class LspOverloadsSettings
 ---@field keymaps LspOverloadsKeymaps
@@ -15,7 +31,17 @@ local M = {}
 local DEFAULT_SETTINGS = {
   ui = {
     -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
-    border = "single"
+    border = "single",
+    height = nil,
+    width = nil,
+    wrap = true,
+    wrap_at = nil,
+    max_width = nil,
+    max_height = nil,
+    focusable = true,
+    focus = false,
+    offset_x = 0,
+    offset_y = 0,
   },
   keymaps = {
     next_signature = "<C-j>",

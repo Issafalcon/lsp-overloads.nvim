@@ -205,7 +205,16 @@ M.open_signature = function(clients)
       vim.lsp.with(M.signature_handler, {
         border = settings.current.ui.border,
         silent = true,
-        focusable = false,
+        height = settings.current.ui.height,
+        width = settings.current.ui.width,
+        wrap = settings.current.ui.wrap,
+        wrap_at = settings.current.ui.wrap_at,
+        max_width = settings.current.ui.max_width,
+        max_height = settings.current.ui.max_height,
+        focusable = settings.current.ui.focusable,
+        focus = settings.current.ui.focus,
+        offset_x = settings.current.ui.offset_x,
+        offset_y = settings.current.ui.offset_y,
       })
     )
   end
