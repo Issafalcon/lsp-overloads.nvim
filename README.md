@@ -60,6 +60,8 @@ the built-in `signatureHelper` LSP handler:
           wrap_at = nil,              -- Character to wrap at for computing height when wrap enabled
           max_width = nil,            -- Maximum signature popup width
           max_height = nil,           -- Maximum signature popup height
+          -- Events that will close the signature popup window: use {"CursorMoved", "CursorMovedI", "InsertCharPre"} to hide the window when typing
+          close_events = { "CursorMoved", "BufHidden", "InsertLeave" },
           focusable = true,           -- Make the popup float focusable
           focus = false,              -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
           offset_x = 0,               -- Horizontal offset of the floating window relative to the cursor position

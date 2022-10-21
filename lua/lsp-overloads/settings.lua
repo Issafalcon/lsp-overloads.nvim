@@ -14,9 +14,6 @@ local M = {}
 ---@field wrap_at string | nil Character to wrap at for computing height when wrap enabled
 ---@field max_width number | nil maximal width of floating window
 ---@field max_height number | nil maximal height of floating window
----@field pad_top number number of lines to pad contents at top
----@field pad_bottom number number of lines to pad contents at bottom
----@field focus_id string if a popup with this id is opened, then focus it
 ---@field close_events table list of events that closes the floating window
 ---@field focusable boolean Make float focusable
 ---@field focus boolean If `true`, and if {focusable}
@@ -38,6 +35,7 @@ local DEFAULT_SETTINGS = {
     wrap_at = nil,
     max_width = nil,
     max_height = nil,
+    close_events = { "CursorMoved", "BufHidden", "InsertLeave" },
     focusable = true,
     focus = false,
     offset_x = 0,
