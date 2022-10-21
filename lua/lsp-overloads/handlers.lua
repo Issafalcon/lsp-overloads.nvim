@@ -19,8 +19,7 @@ local function modify_active_param(param_mod)
       last_signature.activeParameter = next_possible_param_idx
     end
   else
-    local next_possible_param_idx = last_signature.signatures[current_sig_index].activeParameter +
-        (param_mod or 0)
+    local next_possible_param_idx = last_signature.signatures[current_sig_index].activeParameter + (param_mod or 0)
     if next_possible_param_idx >= 0
         and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
     then
@@ -215,6 +214,7 @@ M.open_signature = function(clients)
         focus = settings.current.ui.focus,
         offset_x = settings.current.ui.offset_x,
         offset_y = settings.current.ui.offset_y,
+        close_events = settings.current.ui.close_events,
       })
     )
   end
