@@ -85,10 +85,15 @@ the built-in `signatureHelper` LSP handler:
 LSP trigger characters will cause the signature popup to be displayed. If there are any overloads, the popup will indicate this is the case and
 you will be able to navigate between the overloads.
 
-Regardless of whether or not overloads exist, you will also be able to navigate between the paramters which will change the content of the signature popup to display
-the details of the highlighted paramter.
+Regardless of whether or not overloads exist, you will also be able to navigate between the parameters which will change the content of the signature popup to display
+the details of the highlighted parameter.
 
 ### Toggling Signature Overload and Parameters
+
+To trigger the lsp-overloads signature popup manually when in normal mode, you can create the following mapping, as an example:
+```
+  vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true })
+```
 
 The default mappings are used to navigate between various signature overloads and parameters when the signature popup is displayed:
 - `next_signature = "<C-j>"`

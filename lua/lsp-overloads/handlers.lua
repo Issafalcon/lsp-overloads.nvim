@@ -12,16 +12,18 @@ local function modify_active_param(param_mod)
   if last_signature.activeParameter then
     local next_possible_param_idx = last_signature.activeParameter + (param_mod or 0)
 
-    if next_possible_param_idx >= 0
-        and last_signature.signatures[current_sig_index] ~= nil
-        and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
+    if
+      next_possible_param_idx >= 0
+      and last_signature.signatures[current_sig_index] ~= nil
+      and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
     then
       last_signature.activeParameter = next_possible_param_idx
     end
   else
     local next_possible_param_idx = last_signature.signatures[current_sig_index].activeParameter + (param_mod or 0)
-    if next_possible_param_idx >= 0
-        and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
+    if
+      next_possible_param_idx >= 0
+      and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
     then
       last_signature.signatures[current_sig_index].activeParameter = next_possible_param_idx
     end
@@ -175,8 +177,12 @@ M.signature_handler = function(err, result, ctx, config)
   return fbuf, fwin
 end
 
-M.open_signature = function(clients)
-  local triggered = false
+--- Opens the signature help popup for the current line
+---@param clients table List of lsp_clients to use for signature help
+---@param bypass_trigger boolean Whether or not to bypass the check for trigger characters
+---   used for manaully triggering the function (e.g. via a keymap)
+M.open_signature = function(clients, bypass_trigger)
+  local triggered = bypass_trigger or false
 
   for _, client in pairs(clients) do
     local triggers = client.server_capabilities.signatureHelpProvider.triggerCharacters
