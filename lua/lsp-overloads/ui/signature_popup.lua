@@ -75,20 +75,22 @@ M.convert_signature_help_to_markdown_lines = function(signature_help, ft, trigge
     -- wrap inside a code block so stylize_markdown can render it properly
     label = ("```%s\n%s\n```"):format(ft, label)
   end
-  vim.list_extend(contents, vim.split(label, '\n', true))
+  vim.list_extend(contents, vim.split(label, "\n", true))
   if signature.documentation then
     vim.lsp.util.convert_input_to_markdown_lines(signature.documentation, contents)
   end
 
   if #signature_help.signatures > 1 then
-    vim.list_extend(contents,
-      { "(Overload " .. active_signature + 1 .. " of " .. #signature_help.signatures .. ")", "" })
+    vim.list_extend(
+      contents,
+      { "(Overload " .. active_signature + 1 .. " of " .. #signature_help.signatures .. ")", "" }
+    )
   end
 
   if signature.parameters and #signature.parameters > 0 then
     local active_parameter = (signature.activeParameter or signature_help.activeParameter or 0)
-    if active_parameter < 0
-    then active_parameter = 0
+    if active_parameter < 0 then
+      active_parameter = 0
     end
 
     -- If the activeParameter is > #parameters, then set it to the last
@@ -131,7 +133,9 @@ M.convert_signature_help_to_markdown_lines = function(signature_help, ft, trigge
           end
           for p, param in pairs(signature.parameters) do
             offset = signature.label:find(param.label, offset, true)
-            if not offset then break end
+            if not offset then
+              break
+            end
             if p == active_parameter + 1 then
               active_hl = { offset - 1, offset + #parameter.label - 1 }
               break
