@@ -21,6 +21,7 @@ local M = {}
 ---             {focus_id}
 ---@field offset_x number Horizontal offset of the floating window relative to the cursor position
 ---@field offset_y number Vertical offset of the floating window relative to the cursor position
+---@field floating_window_above_cur_line boolean If `true`, the floating window will be above the current line
 
 ---@class LspOverloadsSettings
 ---@field keymaps LspOverloadsKeymaps
@@ -40,6 +41,7 @@ local DEFAULT_SETTINGS = {
     focus = false,
     offset_x = 0,
     offset_y = 0,
+    floating_window_above_cur_line = false,
   },
   keymaps = {
     next_signature = "<C-j>",

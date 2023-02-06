@@ -66,6 +66,9 @@ the built-in `signatureHelper` LSP handler:
           focus = false,              -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
           offset_x = 0,               -- Horizontal offset of the floating window relative to the cursor position
           offset_y = 0                -- Vertical offset of the floating window relative to the cursor position
+          floating_window_above_cur_line = false -- Attempt to float the popup above the cursor position 
+                                                 -- (note, if the height of the float would be greater than the space left above the cursor, it will default 
+                                                 -- to placing the float below the cursor. The max_height option allows for finer tuning of this)
         },
         keymaps = {
           next_signature = "<C-j>",

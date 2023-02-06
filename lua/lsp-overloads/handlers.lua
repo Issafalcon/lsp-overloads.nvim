@@ -155,6 +155,18 @@ M.signature_handler = function(err, result, ctx, config)
     end
     return
   end
+
+  -- Try and place the floating window above the cursor. If there is not enough room,
+  -- fallback to the default behaviour of nvim_open_win
+  if config.floating_window_above_cur_line then
+    local _, height = vim.lsp.util._make_floating_popup_size(lines, config)
+
+    local lines_above = vim.fn.winline() - 1
+    if lines_above > height then
+      config.offset_y = -height - 3 -- -3 brings the bottom of the popup above the current line
+    end
+  end
+
   local fbuf, fwin = vim.lsp.util.open_floating_preview(lines, "markdown", config)
   if hl then
     vim.api.nvim_buf_add_highlight(fbuf, -1, "LspSignatureActiveParameter", 0, unpack(hl))
@@ -221,6 +233,7 @@ M.open_signature = function(clients, bypass_trigger)
         offset_x = settings.current.ui.offset_x,
         offset_y = settings.current.ui.offset_y,
         close_events = settings.current.ui.close_events,
+        floating_window_above_cur_line = settings.current.ui.floating_window_above_cur_line,
       })
     )
   end
