@@ -2,9 +2,11 @@
 local sig_popup = require("lsp-overloads.ui.signature_popup")
 ---@module "lsp-overloads.settings"
 local settings = require("lsp-overloads.settings")
+local Signature = require("lsp-overloads.models.signature")
 
 local M = {}
 local last_signature = {}
+local signature
 
 local function modify_active_param(param_mod)
   local current_sig_index = last_signature.activeSignature + 1
@@ -112,6 +114,17 @@ local function add_signature_mappings(bufnr)
     modify_sig,
     { sig_modifier = 0, param_modifier = -1 }
   )
+end
+
+M.new_signature_handler = function(err, result, ctx, config)
+  if result == nil then
+    return
+  end
+
+  config = config or {}
+  config.focus_id = ctx.method
+
+  local signature = Signature:new()
 end
 
 --- Modified code from https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382
