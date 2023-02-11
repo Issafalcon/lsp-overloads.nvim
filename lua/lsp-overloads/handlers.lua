@@ -1,65 +1,9 @@
----@module "lsp-overloads.ui.signature_popup"
-local sig_popup = require("lsp-overloads.ui.signature_popup")
 ---@module "lsp-overloads.settings"
 local settings = require("lsp-overloads.settings")
 local Signature = require("lsp-overloads.models.signature")
+local autocommands = require("lsp-overloads.autocommands")
 
 local M = {}
-local last_signature = {}
-local signature
-
-local function modify_active_param(param_mod)
-  local current_sig_index = last_signature.activeSignature + 1
-
-  if last_signature.activeParameter then
-    local next_possible_param_idx = last_signature.activeParameter + (param_mod or 0)
-
-    if
-      next_possible_param_idx >= 0
-      and last_signature.signatures[current_sig_index] ~= nil
-      and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
-    then
-      last_signature.activeParameter = next_possible_param_idx
-    end
-  else
-    local next_possible_param_idx = last_signature.signatures[current_sig_index].activeParameter + (param_mod or 0)
-    if
-      next_possible_param_idx >= 0
-      and (#last_signature.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
-    then
-      last_signature.signatures[current_sig_index].activeParameter = next_possible_param_idx
-    end
-  end
-end
-
-local function modify_active_signature(sig_mod)
-  if #last_signature.signatures == 1 then
-    return
-  else
-    local next_possible_sig_idx = last_signature.activeSignature + (sig_mod or 0)
-    if next_possible_sig_idx >= 0 and #last_signature.signatures - 1 >= next_possible_sig_idx then
-      last_signature.activeSignature = next_possible_sig_idx
-    end
-  end
-end
-
-local modify_sig = function(opts)
-  -- Editing buffers is not allowed from <expr> mappings. The popup mappings are
-  -- all <expr> mappings so they can be used consistently across modes, so instead
-  -- of running the functions directly, they are run in an immediately executed
-  -- timer callback.
-  vim.fn.timer_start(0, function()
-    -- See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelp
-
-    -- Set the root level active signature in case the LSP response doesn't provide one (it's an optional property according to the spec, but
-    -- we need it for the calculations)
-    last_signature.activeSignature = last_signature.activeSignature or 0
-    modify_active_signature(opts.sig_modifier)
-    modify_active_param(opts.param_modifier)
-
-    M.signature_handler(last_signature.err, last_signature, last_signature.ctx, last_signature.config)
-  end)
-end
 
 ---@param line_to_cursor string Text of the line up to the current cursor
 ---@param triggers list List of the trigger chars for firing a textDocument/signatureHelp request
@@ -81,43 +25,18 @@ local check_trigger_char = function(line_to_cursor, triggers)
   return false
 end
 
-local function add_signature_mappings(bufnr)
-  sig_popup.add_mapping(
-    bufnr,
-    last_signature.mode,
-    "sig_next",
-    settings.current.keymaps.next_signature,
-    modify_sig,
-    { sig_modifier = 1, param_modifier = 0 }
-  )
-  sig_popup.add_mapping(
-    bufnr,
-    last_signature.mode,
-    "sig_prev",
-    settings.current.keymaps.previous_signature,
-    modify_sig,
-    { sig_modifier = -1, param_modifier = 0 }
-  )
-  sig_popup.add_mapping(
-    bufnr,
-    last_signature.mode,
-    "param_next",
-    settings.current.keymaps.next_parameter,
-    modify_sig,
-    { sig_modifier = 0, param_modifier = 1 }
-  )
-  sig_popup.add_mapping(
-    bufnr,
-    last_signature.mode,
-    "param_prev",
-    settings.current.keymaps.previous_parameter,
-    modify_sig,
-    { sig_modifier = 0, param_modifier = -1 }
-  )
-end
-
-M.new_signature_handler = function(err, result, ctx, config)
+--- Modified code from https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382
+M.signature_handler = function(err, result, ctx, config)
   if result == nil then
+    return
+  end
+
+  -- When use `autocmd CompleteDone <silent><buffer> lua vim.lsp.buf.signature_help()` to call signatureHelp handler
+  -- If the completion item doesn't have signatures It will make noise. Change to use `print` that can use `<silent>` to ignore
+  if not (result and result.signatures and result.signatures[1]) then
+    if config and config.silent ~= true then
+      print("No signature help available")
+    end
     return
   end
 
@@ -125,81 +44,11 @@ M.new_signature_handler = function(err, result, ctx, config)
   config.focus_id = ctx.method
 
   local signature = Signature:new()
-end
+  signature:update_with_lsp_response(err, result, ctx, config)
+  signature:create_signature_popup()
 
---- Modified code from https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382
-M.signature_handler = function(err, result, ctx, config)
-  if result == nil then
-    return
-  end
-
-  config = config or {}
-  config.focus_id = ctx.method
-
-  -- Clear the signature state and start from scratch based on the current
-  -- line_to_cursor value
-  last_signature = {}
-
-  -- Store the new result in state so we can move between overloads and params
-  last_signature = result
-  last_signature.err = err
-  last_signature.mode = vim.api.nvim_get_mode()["mode"]
-  last_signature.ctx = ctx
-  last_signature.config = config
-
-  -- When use `autocmd CompleteDone <silent><buffer> lua vim.lsp.buf.signature_help()` to call signatureHelp handler
-  -- If the completion item doesn't have signatures It will make noise. Change to use `print` that can use `<silent>` to ignore
-  if not (result and result.signatures and result.signatures[1]) then
-    ---@param err any
-    if config.silent ~= true then
-      print("No signature help available")
-    end
-    return
-  end
-  local client = vim.lsp.get_client_by_id(ctx.client_id)
-  local triggers = vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters")
-  local ft = vim.api.nvim_buf_get_option(ctx.bufnr, "filetype")
-
-  local lines, hl = sig_popup.convert_signature_help_to_markdown_lines(result, ft, triggers)
-  lines = vim.lsp.util.trim_empty_lines(lines)
-  if vim.tbl_isempty(lines) then
-    if config.silent ~= true then
-      print("No signature help available")
-    end
-    return
-  end
-
-  -- Try and place the floating window above the cursor. If there is not enough room,
-  -- fallback to the default behaviour of nvim_open_win
-  if config.floating_window_above_cur_line then
-    local _, height = vim.lsp.util._make_floating_popup_size(lines, config)
-
-    local lines_above = vim.fn.winline() - 1
-    if lines_above > height then
-      config.offset_y = -height - 3 -- -3 brings the bottom of the popup above the current line
-    end
-  end
-
-  local fbuf, fwin = vim.lsp.util.open_floating_preview(lines, "markdown", config)
-  if hl then
-    vim.api.nvim_buf_add_highlight(fbuf, -1, "LspSignatureActiveParameter", 0, unpack(hl))
-  end
-  local bufnr = vim.api.nvim_get_current_buf()
-
-  local augroup = vim.api.nvim_create_augroup("LspSignature_popup_" .. fwin, { clear = false })
-  vim.api.nvim_create_autocmd("WinClosed", {
-    group = augroup,
-    pattern = tostring(fwin),
-    callback = function()
-      local signature_popup = require("lsp-overloads.ui.signature_popup")
-      signature_popup.remove_mappings(bufnr, last_signature.mode)
-      vim.api.nvim_del_augroup_by_id(augroup)
-    end,
-  })
-
-  add_signature_mappings(bufnr)
-
-  return fbuf, fwin
+  autocommands.setup_signature_augroup(signature)
+  M.add_signature_mappings(signature)
 end
 
 --- Opens the signature help popup for the current line
