@@ -76,6 +76,7 @@ the built-in `signatureHelper` LSP handler:
           next_parameter = "<C-l>",
           previous_parameter = "<C-h>",
         },
+        enabled_by_default = true --disables the plugin unless you manually toggle/request it eg LspOverloadsSignatureToggle
       })
   end
 ```
@@ -91,12 +92,19 @@ you will be able to navigate between the overloads.
 Regardless of whether or not overloads exist, you will also be able to navigate between the parameters which will change the content of the signature popup to display
 the details of the highlighted parameter.
 
-### Toggling Signature Overload and Parameters
+### Triggering Signature Overload and Parameters
 
 To trigger the lsp-overloads signature popup manually when in normal mode, you can create the following mapping, as an example:
 ```
-  vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true })
+  vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignatureToggle<CR>", { noremap = true, silent = true })
 ```
+
+#### Toggling 
+Toggling overrides the default state, even if lsp-overloads is disabled, the signature will be displayed if you use 
+```
+:LspOverloadsSignature
+```
+The intended state of lsp-overloads is always on so no default binding is provided.
 
 The default mappings are used to navigate between various signature overloads and parameters when the signature popup is displayed:
 - `next_signature = "<C-j>"`

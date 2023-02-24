@@ -181,6 +181,9 @@ M.signature_handler = function(err, result, ctx, config)
       local signature_popup = require("lsp-overloads.ui.signature_popup")
       signature_popup.remove_mappings(bufnr, last_signature.mode)
       vim.api.nvim_del_augroup_by_id(augroup)
+      
+      local lspoverloads = require("lsp-overloads")
+      lspoverloads.open_fwin = nil
     end,
   })
 
