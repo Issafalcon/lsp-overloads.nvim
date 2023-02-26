@@ -2,11 +2,12 @@
 local settings = require("lsp-overloads.settings")
 local Signature = require("lsp-overloads.models.signature")
 local autocommands = require("lsp-overloads.autocommands")
+local mappings = require("lsp-overloads.mappings")
 
 local M = {}
 
 ---@param line_to_cursor string Text of the line up to the current cursor
----@param triggers list List of the trigger chars for firing a textDocument/signatureHelp request
+---@param triggers table List of the trigger chars for firing a textDocument/signatureHelp request
 local check_trigger_char = function(line_to_cursor, triggers)
   if not triggers then
     return false
@@ -25,7 +26,6 @@ local check_trigger_char = function(line_to_cursor, triggers)
   return false
 end
 
---- Modified code from https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
     return
@@ -43,17 +43,17 @@ M.signature_handler = function(err, result, ctx, config)
   config = config or {}
   config.focus_id = ctx.method
 
-  local signature = Signature:new()
-  signature:update_with_lsp_response(err, result, ctx, config)
+  local signature = Signature:new(result)
+  signature:update_with_lsp_response(err, ctx, config)
   signature:create_signature_popup()
 
   autocommands.setup_signature_augroup(signature)
-  M.add_signature_mappings(signature)
+  mappings.add_signature_mappings(signature)
 end
 
 --- Opens the signature help popup for the current line
 ---@param clients table List of lsp_clients to use for signature help
----@param bypass_trigger boolean Whether or not to bypass the check for trigger characters
+---@param[opt=false] bypass_trigger boolean Whether or not to bypass the check for trigger characters
 ---   used for manaully triggering the function (e.g. via a keymap)
 M.open_signature = function(clients, bypass_trigger)
   local triggered = bypass_trigger or false

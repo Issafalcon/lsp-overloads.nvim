@@ -1,3 +1,4 @@
+---@type SignatureContent
 local SignatureContent = {
   contents = {},
   active_hl = nil,
@@ -105,6 +106,8 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
   return contents, active_hl
 end
 
+--- Create a new SignatureContent object
+---@return SignatureContent The signature content object
 function SignatureContent:new()
   local o = {}
   setmetatable(o, self)
@@ -112,8 +115,9 @@ function SignatureContent:new()
   return o
 end
 
+--- Adds the contents of the signature to the signature content object
+---@param signature Signature The signature object to modify the contents for
 function SignatureContent:add_content(signature)
-  fignvim.fn.put(signature)
   local client = vim.lsp.get_client_by_id(signature.ctx.client_id)
   local triggers = vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters")
   local ft = vim.api.nvim_buf_get_option(signature.ctx.bufnr, "filetype")

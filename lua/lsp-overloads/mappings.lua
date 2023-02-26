@@ -30,32 +30,24 @@ end
 
 function M.add_signature_mappings(signature)
   signature:add_mapping(
-    signature.bufnr,
-    signature.mode,
     "sig_next",
     settings.current.keymaps.next_signature,
     modify_signature,
     { signature = signature, sig_modifier = 1, param_modifier = 0 }
   )
   signature:add_mapping(
-    signature.bufnr,
-    signature.mode,
     "sig_prev",
     settings.current.keymaps.previous_signature,
     modify_signature,
     { signature = signature, sig_modifier = -1, param_modifier = 0 }
   )
-  signature.add_mapping(
-    signature.bufnr,
-    signature.mode,
+  signature:add_mapping(
     "param_next",
     settings.current.keymaps.next_parameter,
     modify_signature,
     { signature = signature, sig_modifier = 0, param_modifier = 1 }
   )
-  signature.add_mapping(
-    signature.bufnr,
-    signature.mode,
+  signature:add_mapping(
     "param_prev",
     settings.current.keymaps.previous_parameter,
     modify_signature,

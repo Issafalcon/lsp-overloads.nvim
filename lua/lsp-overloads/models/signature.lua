@@ -1,5 +1,7 @@
+---@module "lsp-overloads.models.signature-content"
 local SignatureContent = require("lsp-overloads.models.signature-content")
 
+---@type Signature
 local Signature = {
   signatures = {},
   activeSignature = nil,
@@ -17,11 +19,11 @@ function Signature:new(o)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
+
   return o
 end
 
-function Signature:update_with_lsp_response(err, result, ctx, config)
-  self = vim.tbl_deep_extend("force", self, result)
+function Signature:update_with_lsp_response(err, ctx, config)
   self.err = err
   self.mode = vim.api.nvim_get_mode()["mode"]
   self.ctx = ctx
@@ -68,21 +70,21 @@ function Signature:modify_active_param(param_mod)
   end
 end
 
-function Signature:add_mapping(bufnr, mode, mapName, default_lhs, rhs, opts)
-  if self.mappings[bufnr] == nil then
-    self.mappings[bufnr] = {}
+function Signature:add_mapping(mapName, default_lhs, rhs, opts)
+  if self.mappings[self.bufnr] == nil then
+    self.mappings[self.bufnr] = {}
   end
 
-  local config_lhs = self.mappings[bufnr][mapName] or default_lhs
+  local config_lhs = self.mappings[self.bufnr][mapName] or default_lhs
   if config_lhs == nil then
     return
   end
 
-  vim.keymap.set(mode, config_lhs, function()
+  vim.keymap.set(self.mode, config_lhs, function()
     rhs(opts)
-  end, { buffer = bufnr, expr = true, nowait = true })
+  end, { buffer = self.bufnr, expr = true, nowait = true })
 
-  self.mappings[bufnr][mapName] = config_lhs
+  self.mappings[self.bufnr][mapName] = config_lhs
 end
 
 function Signature:remove_mappings(bufnr, mode)
@@ -101,7 +103,7 @@ function Signature:create_signature_popup()
   -- Try and place the floating window above the cursor. If there is not enough room,
   -- fallback to the default behaviour of nvim_open_win
   if self.config.floating_window_above_cur_line then
-    local _, height = vim.lsp.util._make_floating_popup_size(self.signature_content.content, self.config)
+    local _, height = vim.lsp.util._make_floating_popup_size(self.signature_content.contents, self.config)
 
     local lines_above = vim.fn.winline() - 1
     if lines_above > height then
@@ -111,7 +113,7 @@ function Signature:create_signature_popup()
 
   -- This will replace the existing lsp signature popup if it existsk with a new one.
   -- so keep track of new buffer and win numbers
-  local fbuf, fwin = vim.lsp.util.open_floating_preview(self.signature_content.content, "markdown", self.config)
+  local fbuf, fwin = vim.lsp.util.open_floating_preview(self.signature_content.contents, "markdown", self.config)
   if self.signature_content.active_hl then
     vim.api.nvim_buf_add_highlight(fbuf, -1, "LspSignatureActiveParameter", 0, unpack(self.signature_content.active_hl))
   end
