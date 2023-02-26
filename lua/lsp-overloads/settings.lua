@@ -26,7 +26,7 @@ local M = {}
 ---@class LspOverloadsSettings
 ---@field keymaps LspOverloadsKeymaps
 ---@field ui LspOverloadsUiOpts
----@field enabled_by_default boolean if 'false' requires manual call of LspOverloadsSignature or LspOverLoadsSignatureToggle
+---@field display_automatically boolean if 'false' requires manual call of LspOverloadsSignature
 local DEFAULT_SETTINGS = {
   ui = {
     -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
@@ -50,7 +50,7 @@ local DEFAULT_SETTINGS = {
     next_parameter = "<C-l>",
     previous_parameter = "<C-h>",
   },
-  enabled_by_default = true
+  display_automatically = true
 }
 
 M._DEFAULT_SETTINGS = DEFAULT_SETTINGS

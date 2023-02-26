@@ -4,7 +4,7 @@ local settings = require("lsp-overloads.settings")
 local handlers = require("lsp-overloads.handlers")
 
 local M = {
-  enabled = true,
+  display_automatically = true,
   open_fwin=nil
 }
 
@@ -18,7 +18,7 @@ function M.setup(client, config)
   if config then
     settings.set(config)
   end
-  M.enabled = settings.current.enabled_by_default
+  M.display_automatically = settings.current.display_automatically
 
   table.insert(clients, client)
   local group = augroup("LspSignature", { clear = false })
@@ -33,7 +33,7 @@ function M.setup(client, config)
       if #active_clients < 1 then
         return
       end
-      if (M.enabled) then
+      if (M.display_automatically) then
         local _, fwin = handlers.open_signature(clients, nil)
         M.open_fwin = fwin
       end
@@ -44,9 +44,11 @@ function M.setup(client, config)
 end
 
 
-function M.user_request_overloads_signature()
+function M.show() --user requested show
+  print("showing")
   local lsp_clients = vim.lsp.get_active_clients()
   if #lsp_clients < 1 then --quit here first so we dont have to create the table
+    vim.notify("No LSP clients available")
     return false
   end
 
@@ -57,29 +59,47 @@ function M.user_request_overloads_signature()
     end
   end
   if (#clients < 1) then 
+    vim.notify("No LSP clients with signatureHelpProvider capabilities")
     return false 
   end
   
-  local _, fwin = handlers.open_signature(clients, true)
-  M.open_fwin = fwin
+  handlers.open_signature(clients, true)
+end
+function M.visible()
+  return M.open_fwin ~= nil
+end
+function M.toggle_display()
+  if (M.visible()) then 
+    M.hide()
+  else 
+    M.show()
+  end
+end
+function M.hide()
+  if (M.visible()) then
+     vim.api.nvim_win_close(M.open_fwin,false)
+     print("hidden")
+     M.open_fwin = nil
+  end
 end
 
-M.toggle = function(explicitState,showOnToggle)
-  local old = M.enabled
+function M.toggle_automatic_display(explicitState,showOnToggle)
+  local old = M.display_automatically
   if (explicitState == nil) then
-    M.enabled = not M.enabled
+    M.display_automatically = not M.display_automatically
   else
-    M.enabled = explicitState
+    M.display_automatically = explicitState
   end
-  vim.notify("lsp overloads enabled: "..tostring(M.enabled))
+  vim.notify("lsp overloads display automatically: "..tostring(M.display_automatically))
+  --not sure if this is necessary anymore?
   if (not old and showOnToggle) then 
-    M.user_request_overloads_signature();
+    M.show();
   end
 
-  if (not M.enabled and M.open_fwin) then 
-    vim.api.nvim_win_close(m.open_fwin)
-    M.open_fwin = nil
+  if (not M.display_automatically and M.visible()) then 
+    M.hide()
   end
 end
+
 
 return M

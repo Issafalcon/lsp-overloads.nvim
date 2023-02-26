@@ -117,6 +117,7 @@ end
 --- Modified code from https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
+    vim.notify("lsp signature display is not possible here")
     return
   end
 
@@ -173,6 +174,8 @@ M.signature_handler = function(err, result, ctx, config)
   end
   local bufnr = vim.api.nvim_get_current_buf()
 
+  local lspoverloads = require("lsp-overloads")
+  lspoverloads.open_fwin = fwin
   local augroup = vim.api.nvim_create_augroup("LspSignature_popup_" .. fwin, { clear = false })
   vim.api.nvim_create_autocmd("WinClosed", {
     group = augroup,
@@ -182,7 +185,6 @@ M.signature_handler = function(err, result, ctx, config)
       signature_popup.remove_mappings(bufnr, last_signature.mode)
       vim.api.nvim_del_augroup_by_id(augroup)
       
-      local lspoverloads = require("lsp-overloads")
       lspoverloads.open_fwin = nil
     end,
   })
