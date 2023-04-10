@@ -1,56 +1,10 @@
-local M = {}
+---@type SignatureContent
+local SignatureContent = {
+  contents = {},
+  active_hl = nil,
+}
 
----@alias SignatureMaps table<string, string>
-
----@alias PopupMappings table<string, SignatureMaps>
-
----@type PopupMappings
-local sig_popup_mappings = {}
-
----@param bufnr number The buffer number of the active buffer
----@param mode '"i"'|'"n"'|'"v"'|'"x"' The vim mode to apply the mapping to
----@param mapName string The unique name of the mapping
----@param default_lhs string The key presses required to trigger the mapping
----@param rhs fun(opts?: table): nil The function to execute when mapping is triggers
----@param opts? table The options to pass to the rhs function
-M.add_mapping = function(bufnr, mode, mapName, default_lhs, rhs, opts)
-  if sig_popup_mappings[bufnr] == nil then
-    sig_popup_mappings[bufnr] = {}
-  end
-
-  local config_lhs = sig_popup_mappings[bufnr][mapName] or default_lhs
-  if config_lhs == nil then
-    return
-  end
-
-  vim.keymap.set(mode, config_lhs, function()
-    rhs(opts)
-  end, { buffer = bufnr, expr = true, nowait = true })
-
-  sig_popup_mappings[bufnr][mapName] = config_lhs
-end
-
----@param bufnr number The buffer number of the active buffer
----@param mode '"i"'|'"n"'|'"v"'|'"x"' The mode to which the original mapping was applied to
-M.remove_mappings = function(bufnr, mode)
-  for _, buf_local_mappings in pairs(sig_popup_mappings) do
-    for _, value in pairs(buf_local_mappings) do
-      vim.keymap.del(mode, value, { buffer = bufnr, silent = true })
-    end
-  end
-
-  sig_popup_mappings = {}
-end
-
---- Converts `textDocument/SignatureHelp` response to markdown lines.
---- Modified code from https://github.com/neovim/neovim/blob/41785b1b0cd8b54700110d0c83f599126b38a8c9/runtime/lua/vim/lsp/util.lua#L858
----
----@param signature_help any Response of `textDocument/SignatureHelp`
----@param ft? string optional filetype that will be use as the `lang` for the label markdown code block
----@param triggers? table<string> optional list of trigger characters from the lsp server. used to better determine parameter offsets
----@returns list of lines of converted markdown.
----@see https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp
-M.convert_signature_help_to_markdown_lines = function(signature_help, ft, triggers)
+local function convert_signature_help_to_markdown_lines(signature_help, ft, triggers)
   if not signature_help.signatures then
     return
   end
@@ -152,4 +106,31 @@ M.convert_signature_help_to_markdown_lines = function(signature_help, ft, trigge
   return contents, active_hl
 end
 
-return M
+--- Create a new SignatureContent object
+---@return SignatureContent The signature content object
+function SignatureContent:new()
+  local o = {}
+  setmetatable(o, self)
+  self.__index = self
+  return o
+end
+
+--- Adds the contents of the signature to the signature content object
+---@param signature Signature The signature object to modify the contents for
+function SignatureContent:add_content(signature)
+  local client = vim.lsp.get_client_by_id(signature.ctx.client_id)
+  local triggers = vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters")
+  local ft = vim.api.nvim_buf_get_option(signature.ctx.bufnr, "filetype")
+
+  self.contents, self.active_hl = convert_signature_help_to_markdown_lines(signature, ft, triggers)
+
+  self.contents = vim.lsp.util.trim_empty_lines(self.contents)
+  if vim.tbl_isempty(self.contents) then
+    if signature.config.silent ~= true then
+      print("No signature help available")
+    end
+    return
+  end
+end
+
+return SignatureContent
