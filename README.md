@@ -6,6 +6,7 @@
   <img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/Issafalcon/lsp-overloads.nvim?style=for-the-badge">
 </a>
 </p>
+
 # LSP Overloads Nvim
 
 Extends the built-in Neovim LSP signature helper handler to add additional functionality, focussing on enhancements
