@@ -28,6 +28,9 @@ end
 
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
+    if config and config.silent ~= true then
+      vim.notify("No signature help available")
+    end
     return
   end
 
@@ -35,7 +38,7 @@ M.signature_handler = function(err, result, ctx, config)
   -- If the completion item doesn't have signatures It will make noise. Change to use `print` that can use `<silent>` to ignore
   if not (result and result.signatures and result.signatures[1]) then
     if config and config.silent ~= true then
-      print("No signature help available")
+      vim.notify("No signature help available")
     end
     return
   end
@@ -83,7 +86,7 @@ M.open_signature = function(clients, bypass_trigger)
       params,
       vim.lsp.with(M.signature_handler, {
         border = settings.current.ui.border,
-        silent = true,
+        silent = settings.current.silent,
         height = settings.current.ui.height,
         width = settings.current.ui.width,
         wrap = settings.current.ui.wrap,

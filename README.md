@@ -75,7 +75,9 @@ the built-in `signatureHelper` LSP handler:
           previous_signature = "<C-k>",
           next_parameter = "<C-l>",
           previous_parameter = "<C-h>",
+          close_signature = "<A-s>"
         },
+        display_automatically = true -- Uses trigger characters to automatically display the signature overloads when typing a method signature
       })
   end
 ```
@@ -91,18 +93,38 @@ you will be able to navigate between the overloads.
 Regardless of whether or not overloads exist, you will also be able to navigate between the parameters which will change the content of the signature popup to display
 the details of the highlighted parameter.
 
-### Toggling Signature Overload and Parameters
+### Triggering Signature Overload and Parameters
 
 To trigger the lsp-overloads signature popup manually when in normal mode, you can create the following mapping, as an example:
 ```
   vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true })
 ```
 
+It is also useful to create the corresponding trigger mapping for insert mode too (helps when toggling the popup while in insert mode)
+```
+  vim.api.nvim_set_keymap("i", "<A-s>", "<cmd>LspOverloadsSignature<CR>", { noremap = true, silent = true })
+```
+
+Closing the popup while typing can be done using the pre-configured `close_signature` keybind created when the signature window is created (see [Keybinds](#keybinds))
+- It is recommended to override this to match the keybind you use to trigger the overload popup manually, so toggling is more intuitive
+
+#### Toggling automatic display
+lsp-overloads automatically shows itself by default when you are inside of a function signature and begin typing.
+You can toggle this feature using 
+```
+:LspOverloadsSignatureAutoToggle
+```
+You can disable this automatic triggering of lsp-overloads by setting 'display_automatically' to false as part of the config.
+
+### Keybinds
 The default mappings are used to navigate between various signature overloads and parameters when the signature popup is displayed:
 - `next_signature = "<C-j>"`
 - `previous_signature = "<C-k>"`
 - `next_parameter = "<C-l>"`
 - `previous_parameter = "<C-h>"`
+- `close_signature = "<A-s>"`
+
+**NOTE: If you already have a keybinding that matches one of the above, it will only get overwritten when the signature popup is open. When the popup is closed, your original keybinding will be restored in the buffer. If you still need to keep your original mappings while the signature popup is open, you will need to modify these bindings so they no longer conflict** 
 
 ### Additional Tips
 

@@ -3,6 +3,7 @@
 ---@field previous_signature string
 ---@field next_parameter string
 ---@field previous_parameter string
+---@field close_signature string
 
 ---@class LspOverloadsUiOpts
 ---@field border '"none"'|'"single"'|'"double"'
@@ -24,3 +25,5 @@
 ---@class LspOverloadsSettings
 ---@field keymaps LspOverloadsKeymaps
 ---@field ui LspOverloadsUiOpts
+---@field display_automatically boolean if 'false' requires manual call of LspOverloadsSignature
+---@field silent boolean if 'true', shows lsp signature diagnostic messages using vim.notify() (default = true)

@@ -10,6 +10,7 @@ local Signature = {
   ctx = {},
   config = {},
   mappings = {},
+  original_buf_mappings = {},
   bufnr = nil,
   fwin = nil,
   signature_content = SignatureContent:new(),
@@ -75,9 +76,30 @@ function Signature:add_mapping(mapName, default_lhs, rhs, opts)
     self.mappings[self.bufnr] = {}
   end
 
+  if self.original_buf_mappings[self.bufnr] == nil then
+    self.original_buf_mappings[self.bufnr] = {}
+  end
+
   local config_lhs = self.mappings[self.bufnr][mapName] or default_lhs
   if config_lhs == nil then
     return
+  end
+
+  -- Check if we have already stored the users original keymapping value before
+  -- If we haven't, get it from the list of buf keymaps and store it, so that when the signature window is destroyed later,
+  -- we can restore the users original keymapping.
+  if self.original_buf_mappings[self.bufnr][config_lhs] == nil then
+    local original_buf_keymaps = vim.api.nvim_buf_get_keymap(self.bufnr, self.mode)
+
+    -- If the user has mapped <A-...> to something, then the keymap will be stored as <M-...>
+    local alt_modified_lhs = string.gsub(config_lhs, "<A%-", "<M%-")
+
+    for _, keymap in ipairs(original_buf_keymaps) do
+      if keymap.lhs == config_lhs or keymap.lhs == alt_modified_lhs then
+        self.original_buf_mappings[self.bufnr][config_lhs] = keymap
+        vim.keymap.del(self.mode, keymap.lhs, { buffer = self.bufnr })
+      end
+    end
   end
 
   vim.keymap.set(self.mode, config_lhs, function()
@@ -89,8 +111,15 @@ end
 
 function Signature:remove_mappings(bufnr, mode)
   for _, buf_local_mappings in pairs(self.mappings) do
-    for _, value in pairs(buf_local_mappings) do
-      vim.keymap.del(mode, value, { buffer = bufnr, silent = true })
+    for _, lhs in pairs(buf_local_mappings) do
+      vim.keymap.del(mode, lhs, { buffer = bufnr, silent = true })
+
+      -- Restore the original mapping if it existed
+      local original_buf_map = self.original_buf_mappings[bufnr][lhs]
+
+      if original_buf_map ~= nil then
+        vim.fn.mapset(mode, 0, original_buf_map)
+      end
     end
   end
 
@@ -125,6 +154,13 @@ function Signature:create_signature_popup()
 
   self.bufnr = bufnr
   self.fwin = fwin
+end
+
+function Signature:close_signature_popup()
+  -- Close the window here, which will trigger the autocommand to remove the mappings and dispose of the signature object
+  vim.schedule(function()
+    vim.api.nvim_win_close(self.fwin, true)
+  end)
 end
 
 return Signature

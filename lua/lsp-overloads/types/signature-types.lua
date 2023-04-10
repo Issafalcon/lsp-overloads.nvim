@@ -9,4 +9,6 @@
 ---@field ctx table The context
 ---@field config table The configuration
 ---@field signatures table The signatures
+---@field mappings table<number, table<string, string>> The mapping list, indexed first by buffer number, then by mapping name, giving the lhs value of the mapping
+---@field original_buf_mappings table<number, table<string, table>> The mapping list, indexed first by buffer number, then by lhs, giving the maparg() dictionary value of the mapping
 ---@field signature_content SignatureContent The signature content

@@ -26,11 +26,13 @@ function M.setup(client, config)
     callback = function()
       -- Guard against spamming of method not supported after
       -- stopping a language server with LspStop
-      local active_clients = vim.lsp.get_active_clients()
-      if #active_clients < 1 then
-        return
+      if settings.current.display_automatically then
+        local active_clients = vim.lsp.get_active_clients()
+        if #active_clients < 1 then
+          return
+        end
+        handlers.open_signature(clients)
       end
-      handlers.open_signature(clients)
     end,
   })
 
