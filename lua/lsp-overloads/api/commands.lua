@@ -18,3 +18,11 @@ vim.api.nvim_create_user_command("LspOverloadsSignature", lsp_overloads_signatur
   desc = "Triggers the lspoverloads signature request",
   nargs = 0,
 })
+
+vim.api.nvim_create_user_command("LspOverloadsSignatureAutoToggle", function()
+  local settings = require("lsp-overloads.settings")
+  settings.set({ display_automatically = not settings.current.display_automatically })
+end, {
+  desc = "Toggles the automatic display of the signature popup",
+  nargs = 0,
+})
