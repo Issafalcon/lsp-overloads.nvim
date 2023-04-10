@@ -1,3 +1,11 @@
+<p align="center">
+<a href="https://github.com/Issafalcon/lsp-overloads.nvim/actions/workflows/main.yml">
+  <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Issafalcon/lsp-overloads.nvim/main.yml?label=main&style=for-the-badge">
+</a>
+<a href="https://github.com/Issafalcon/lsp-overloads.nvim/releases">
+  <img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/Issafalcon/lsp-overloads.nvim?style=for-the-badge">
+</a>
+</p>
 # LSP Overloads Nvim
 
 Extends the built-in Neovim LSP signature helper handler to add additional functionality, focussing on enhancements
