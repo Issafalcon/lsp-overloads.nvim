@@ -75,6 +75,7 @@ the built-in `signatureHelper` LSP handler:
           previous_signature = "<C-k>",
           next_parameter = "<C-l>",
           previous_parameter = "<C-h>",
+          close_signature = "<A-s>"
         },
         display_automatically = true --enables the automatic display feature alternativelly you can manually request with LspOverloadsSignature
       })
@@ -118,6 +119,7 @@ The default mappings are used to navigate between various signature overloads an
 - `previous_signature = "<C-k>"`
 - `next_parameter = "<C-l>"`
 - `previous_parameter = "<C-h>"`
+- `close_signature = "<A-s>"`
 
 ### Additional Tips
 

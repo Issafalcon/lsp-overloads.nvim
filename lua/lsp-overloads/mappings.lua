@@ -28,6 +28,10 @@ local function modify_signature(opts)
   end)
 end
 
+local function close_signature(opts)
+  opts.signature:close_signature_popup()
+end
+
 function M.add_signature_mappings(signature)
   signature:add_mapping(
     "sig_next",
@@ -53,6 +57,7 @@ function M.add_signature_mappings(signature)
     modify_signature,
     { signature = signature, sig_modifier = 0, param_modifier = -1 }
   )
+  signature:add_mapping("close", settings.current.keymaps.close_signature, close_signature, { signature = signature })
 end
 
 return M

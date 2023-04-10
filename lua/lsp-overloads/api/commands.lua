@@ -1,26 +1,20 @@
 local function lsp_overloads_signature()
-  require("lsp-overloads").show()
+  local lsp_clients = vim.lsp.get_active_clients()
+
+  local clients = {}
+  if #lsp_clients < 1 then
+    return
+  end
+
+  for _, client in ipairs(lsp_clients) do
+    if client.server_capabilities.signatureHelpProvider then
+      table.insert(clients, client)
+    end
+  end
+  require("lsp-overloads.handlers").open_signature(clients, true)
 end
+
 vim.api.nvim_create_user_command("LspOverloadsSignature", lsp_overloads_signature, {
-  desc = "Shows the lspoverloads signature display",
+  desc = "Triggers the lspoverloads signature request",
   nargs = 0,
 })
-
-
-local function lsp_overloads_signature_toggle_auto()
-  require("lsp-overloads").toggle_automatic_display()
-end
-vim.api.nvim_create_user_command("LspOverloadsSignatureAutoToggle", lsp_overloads_signature_toggle_auto, {
-  desc = "Toggles the lspoverloads signature automatic display on typing",
-  nargs = 0,
-})
-
-
-local function lsp_overloads_signature_toggle_display()
-  require("lsp-overloads").toggle_display()
-end
-vim.api.nvim_create_user_command("LspOverloadsSignatureDisplayToggle", lsp_overloads_signature_toggle_display, {
-  desc = "Toggles the lspoverloads signature display",
-  nargs = 0,
-})
-

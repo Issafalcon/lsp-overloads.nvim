@@ -23,8 +23,10 @@ local DEFAULT_SETTINGS = {
     previous_signature = "<C-k>",
     next_parameter = "<C-l>",
     previous_parameter = "<C-h>",
+    close_signature = "<A-s>",
   },
   display_automatically = true,
+  silent = false,
 }
 
 M._DEFAULT_SETTINGS = DEFAULT_SETTINGS
