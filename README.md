@@ -99,10 +99,14 @@ To trigger the lsp-overloads signature popup manually when in normal mode, you c
 ```
   vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true })
 ```
-To instead toggle the display on and off, you can use 
+
+It is also useful to create the corresponding trigger mapping for insert mode too (helps when toggling the popup while in insert mode)
 ```
-:LspOverloadsSignatureDisplayToggle
+  vim.api.nvim_set_keymap("i", "<A-s>", "<cmd>LspOverloadsSignature<CR>", { noremap = true, silent = true })
 ```
+
+Closing the popup while typing can be done using the pre-configured `close_signature` keybind created when the signature window is created (see [Keybinds](#keybinds))
+- It is recommended to override this to match the keybind you use to trigger the overload popup manually, so toggling is more intuitive
 
 #### Toggling automatic display
 lsp-verloads automatically shows itself by default when you are inside of a function signature and begin typing.
@@ -120,6 +124,8 @@ The default mappings are used to navigate between various signature overloads an
 - `next_parameter = "<C-l>"`
 - `previous_parameter = "<C-h>"`
 - `close_signature = "<A-s>"`
+
+**NOTE: If you already have a keybinding that matches one of the above, it will only get overwritten when the signature popup is open. When the popup is closed, your original keybinding will be restored in the buffer. If you still need to keep your original mappings while the signature popup is open, you will need to modify these bindings so they no longer conflict** 
 
 ### Additional Tips
 
