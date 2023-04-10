@@ -77,7 +77,7 @@ the built-in `signatureHelper` LSP handler:
           previous_parameter = "<C-h>",
           close_signature = "<A-s>"
         },
-        display_automatically = true --enables the automatic display feature alternativelly you can manually request with LspOverloadsSignature
+        display_automatically = true -- Uses trigger characters to automatically display the signature overloads when typing a method signature
       })
   end
 ```
@@ -109,13 +109,12 @@ Closing the popup while typing can be done using the pre-configured `close_signa
 - It is recommended to override this to match the keybind you use to trigger the overload popup manually, so toggling is more intuitive
 
 #### Toggling automatic display
-lsp-verloads automatically shows itself by default when you are inside of a function signature and begin typing.
+lsp-overloads automatically shows itself by default when you are inside of a function signature and begin typing.
 You can toggle this feature using 
 ```
 :LspOverloadsSignatureAutoToggle
 ```
-You can disable lsp-overloads by default by setting 'display_automatically' to false as part of the config.
-
+You can disable this automatic triggering of lsp-overloads by setting 'display_automatically' to false as part of the config.
 
 ### Keybinds
 The default mappings are used to navigate between various signature overloads and parameters when the signature popup is displayed:
