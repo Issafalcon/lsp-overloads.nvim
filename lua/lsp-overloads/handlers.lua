@@ -28,9 +28,6 @@ end
 
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
-    if config and config.silent ~= true then
-      vim.notify("No signature help available")
-    end
     return
   end
 
