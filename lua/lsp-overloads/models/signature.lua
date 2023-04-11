@@ -112,7 +112,8 @@ end
 function Signature:remove_mappings(bufnr, mode)
   for _, buf_local_mappings in pairs(self.mappings) do
     for _, lhs in pairs(buf_local_mappings) do
-      vim.keymap.del(mode, lhs, { buffer = bufnr, silent = true })
+      -- Delete the mapping if it has been created (this may error in the case of race conditions, so swallow it)
+      pcall(vim.keymap.del, mode, lhs, { buffer = bufnr, silent = true })
 
       -- Restore the original mapping if it existed
       local original_buf_map = self.original_buf_mappings[bufnr][lhs]
