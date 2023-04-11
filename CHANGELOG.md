@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.2.0...v1.2.1) (2023-04-11)
+
+
+### Bug Fixes
+
+* **mapping-deletion:** Swallows the keymap deletion error ([e5fff62](https://github.com/Issafalcon/lsp-overloads.nvim/commit/e5fff6210c7802e54d1888c4bf8bc50196a2bd14))
+
 ## [1.2.0](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.1.0...v1.2.0) (2023-04-10)
 
 
