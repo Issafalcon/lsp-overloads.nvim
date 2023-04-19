@@ -6,6 +6,28 @@ local mappings = require("lsp-overloads.mappings")
 
 local M = {}
 
+--- Helper function to prevent multiple signature popups from opening whilst entering a tuple argument.
+--- Makes the assumption that the language calls functions using parentheses, and tuples / argument lists are also enclosed in parentheses.
+---@param line_to_cursor string The text contained in the line up to the current cursor position
+---@return boolean Whether or not the cursor is inside a tuple
+local function check_tuple(line_to_cursor)
+  -- Quick return if there are no open parens (i.e. Not in a supported function call)
+  if not line_to_cursor:match("%(") then
+    return true
+  end
+
+  local open_parens = 0
+  local closed_parens = 0
+  for _ in line_to_cursor:gmatch("%(") do
+    open_parens = open_parens + 1
+  end
+  for _ in line_to_cursor:gmatch("%)") do
+    closed_parens = closed_parens + 1
+  end
+
+  return open_parens == closed_parens + 1 and true or false
+end
+
 ---@param line_to_cursor string Text of the line up to the current cursor
 ---@param triggers table List of the trigger chars for firing a textDocument/signatureHelp request
 local check_trigger_char = function(line_to_cursor, triggers)
@@ -14,12 +36,19 @@ local check_trigger_char = function(line_to_cursor, triggers)
   end
 
   for _, trigger_char in ipairs(triggers) do
+    -- Check if cursor is inside a tuple
     local current_char = line_to_cursor:sub(#line_to_cursor, #line_to_cursor)
     local prev_char = line_to_cursor:sub(#line_to_cursor - 1, #line_to_cursor - 1)
     if current_char == trigger_char then
+      if trigger_char == "," then
+        return check_tuple(line_to_cursor)
+      end
       return true
     end
     if current_char == " " and prev_char == trigger_char then
+      if trigger_char == "," then
+        return check_tuple(line_to_cursor)
+      end
       return true
     end
   end
