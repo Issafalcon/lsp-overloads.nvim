@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.2.1...v1.3.0) (2023-08-13)
+
+
+### Features
+
+* **29:** Prevents signature window trigger when entering tuple args ([dedf7de](https://github.com/Issafalcon/lsp-overloads.nvim/commit/dedf7de90e9762cb9ee44dec8f5d189faa542103))
+
 ## [1.2.1](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.2.0...v1.2.1) (2023-04-11)
 
 
