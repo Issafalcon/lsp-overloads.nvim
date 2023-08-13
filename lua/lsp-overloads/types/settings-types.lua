@@ -6,7 +6,7 @@
 ---@field close_signature string
 
 ---@class LspOverloadsUiOpts
----@field border '"none"'|'"single"'|'"double"'
+---@field border '"none"'|'"single"'|'"double"'|'"rounded"'|'"solid"'|'"shadow"'
 ---@field height number | nil Height of the signature window
 ---@field width number | nil Width of the signature window
 ---@field wrap boolean Wrap long lines
