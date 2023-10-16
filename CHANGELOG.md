@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.3.0...v1.3.1) (2023-10-16)
+
+
+### Bug Fixes
+
+* **settings:** Fixes silent setting and adds note to README ([49c789d](https://github.com/Issafalcon/lsp-overloads.nvim/commit/49c789d477117e64b906a8b5f9f9ce0ec9e0e07e))
+
 ## [1.3.0](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.2.1...v1.3.0) (2023-08-13)
 
 
