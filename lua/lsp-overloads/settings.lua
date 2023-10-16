@@ -16,6 +16,7 @@ local DEFAULT_SETTINGS = {
     focus = false,
     offset_x = 0,
     offset_y = 0,
+    silent = true,
     floating_window_above_cur_line = false,
   },
   keymaps = {

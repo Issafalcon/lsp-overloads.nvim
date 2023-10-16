@@ -74,10 +74,11 @@ the built-in `signatureHelper` LSP handler:
           focusable = true,           -- Make the popup float focusable
           focus = false,              -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
           offset_x = 0,               -- Horizontal offset of the floating window relative to the cursor position
-          offset_y = 0                -- Vertical offset of the floating window relative to the cursor position
-          floating_window_above_cur_line = false -- Attempt to float the popup above the cursor position 
+          offset_y = 0,                -- Vertical offset of the floating window relative to the cursor position
+          floating_window_above_cur_line = false, -- Attempt to float the popup above the cursor position 
                                                  -- (note, if the height of the float would be greater than the space left above the cursor, it will default 
                                                  -- to placing the float below the cursor. The max_height option allows for finer tuning of this)
+          silent = true               -- Prevents noisy notifications (make false to help debug why signature isn't working)
         },
         keymaps = {
           next_signature = "<C-j>",
@@ -139,6 +140,8 @@ The default mappings are used to navigate between various signature overloads an
 
 - Any calls to `vim.lsp.buf.signature_help()` made while the plugin's signature popup is displayed, will behave
 in the same way as the built-in signature popup (i.e. When `focusable` set to true Cursor will enter the popup in normal mode, allowing scrolling behaviour)
+
+- If signatures aren't showing up when you expect them to, try setting `silent` to false. If you then see a popup that states `No signature help found`, then at least you know it's probably the LSP that isn't returning the signature help.
 
 ## Credits
 

@@ -112,7 +112,7 @@ M.open_signature = function(clients, bypass_trigger)
       params,
       vim.lsp.with(M.signature_handler, {
         border = settings.current.ui.border,
-        silent = settings.current.silent,
+        silent = settings.current.ui.silent,
         height = settings.current.ui.height,
         width = settings.current.ui.width,
         wrap = settings.current.ui.wrap,
