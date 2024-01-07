@@ -104,15 +104,26 @@ Regardless of whether or not overloads exist, you will also be able to navigate 
 the details of the highlighted parameter.
 
 ### Triggering Signature Overload and Parameters
+❗**NOTE:** 
+- In order to allow the mappings to function correctly, you will need to create mappings for the specific buffer that your LSP client is attached to. Therefore, the mapping below should all be created
+  within the custom `on_attach` function of the LSP-server.
 
 To trigger the lsp-overloads signature popup manually when in normal mode, you can create the following mapping, as an example:
 ```
-  vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true })
+  -- Inside the on_attach function (which passes in 'client' and 'bufnr' params)
+  ...
+  if client.server_capabilities.signatureHelpProvider then
+    vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true, buffer = bufnr })
+  end
 ```
 
 It is also useful to create the corresponding trigger mapping for insert mode too (helps when toggling the popup while in insert mode)
 ```
-  vim.api.nvim_set_keymap("i", "<A-s>", "<cmd>LspOverloadsSignature<CR>", { noremap = true, silent = true })
+  -- Inside the on_attach function (which passes in 'client' and 'bufnr' params)
+  ...
+  if client.server_capabilities.signatureHelpProvider then
+    vim.api.nvim_set_keymap("i", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true, buffer = bufnr })
+  end
 ```
 
 Closing the popup while typing can be done using the pre-configured `close_signature` keybind created when the signature window is created (see [Keybinds](#keybinds))
