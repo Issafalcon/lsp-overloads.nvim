@@ -1,7 +1,7 @@
 ---@module "lsp-overloads.models.signature-content"
 local SignatureContent = require("lsp-overloads.models.signature-content")
 
----@type Signature
+---@class Signature
 local Signature = {
   signatures = {},
   activeSignature = nil,
@@ -81,6 +81,7 @@ function Signature:add_mapping(mapName, default_lhs, rhs, opts)
   end
 
   local config_lhs = self.mappings[self.bufnr][mapName] or default_lhs
+
   if config_lhs == nil then
     return
   end
@@ -88,18 +89,9 @@ function Signature:add_mapping(mapName, default_lhs, rhs, opts)
   -- Check if we have already stored the users original keymapping value before
   -- If we haven't, get it from the list of buf keymaps and store it, so that when the signature window is destroyed later,
   -- we can restore the users original keymapping.
-  if self.original_buf_mappings[self.bufnr][config_lhs] == nil then
-    local original_buf_keymaps = vim.api.nvim_buf_get_keymap(self.bufnr, self.mode)
-
-    -- If the user has mapped <A-...> to something, then the keymap will be stored as <M-...>
-    local alt_modified_lhs = string.gsub(config_lhs, "<A%-", "<M%-")
-
-    for _, keymap in ipairs(original_buf_keymaps) do
-      if keymap.lhs == config_lhs or keymap.lhs == alt_modified_lhs then
-        self.original_buf_mappings[self.bufnr][config_lhs] = keymap
-        vim.keymap.del(self.mode, keymap.lhs, { buffer = self.bufnr })
-      end
-    end
+  if self.original_buf_mappings[self.bufnr][config_lhs] == nil and vim.fn.mapcheck(config_lhs, self.mode) ~= "" then
+    local original_map = vim.fn.maparg(config_lhs, self.mode, 0, 1)
+    self.original_buf_mappings[self.bufnr][config_lhs] = original_map
   end
 
   vim.keymap.set(self.mode, config_lhs, function()
@@ -119,7 +111,8 @@ function Signature:remove_mappings(bufnr, mode)
       local original_buf_map = self.original_buf_mappings[bufnr][lhs]
 
       if original_buf_map ~= nil then
-        vim.fn.mapset(mode, 0, original_buf_map)
+        vim.fn.mapset(self.mode, 0, original_buf_map)
+        self.original_buf_mappings[bufnr][lhs] = nil
       end
     end
   end
