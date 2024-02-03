@@ -24,7 +24,6 @@ local function modify_signature(opts)
     opts.signature:create_signature_popup()
 
     autocommands.setup_signature_augroup(opts.signature)
-    M.add_signature_mappings(opts.signature)
   end)
 end
 
