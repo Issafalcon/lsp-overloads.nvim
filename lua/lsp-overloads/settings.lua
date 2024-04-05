@@ -18,6 +18,10 @@ local DEFAULT_SETTINGS = {
     offset_y = 0,
     silent = true,
     floating_window_above_cur_line = false,
+    highlight = {
+      italic=true,
+      bold=true,
+    }
   },
   keymaps = {
     next_signature = "<C-j>",
