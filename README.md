@@ -122,7 +122,7 @@ It is also useful to create the corresponding trigger mapping for insert mode to
   -- Inside the on_attach function (which passes in 'client' and 'bufnr' params)
   ...
   if client.server_capabilities.signatureHelpProvider then
-    vim.api.nvim_set_keymap("i", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true, buffer = bufnr })
+    vim.api.nvim_set_keymap("i", "<A-s>", "<cmd>LspOverloadsSignature<CR>", { noremap = true, silent = true, buffer = bufnr })
   end
 ```
 
