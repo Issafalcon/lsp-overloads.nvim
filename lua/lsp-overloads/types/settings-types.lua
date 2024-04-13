@@ -22,6 +22,7 @@
 ---@field offset_x number Horizontal offset of the floating window relative to the cursor position
 ---@field offset_y number Vertical offset of the floating window relative to the cursor position
 ---@field floating_window_above_cur_line boolean If `true`, the floating window will be above the current line
+---@field highlight table | nil Highlight options for the "LspSignatureActiveParameter" highlight
 
 ---@class LspOverloadsSettings
 ---@field keymaps LspOverloadsKeymaps
