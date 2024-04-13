@@ -10,6 +10,7 @@
 ---@field height number | nil Height of the signature window
 ---@field width number | nil Width of the signature window
 ---@field wrap boolean Wrap long lines
+---@field silent boolean if 'true', shows lsp signature diagnostic messages using vim.notify() (default = true)
 ---@field wrap_at string | nil Character to wrap at for computing height when wrap enabled
 ---@field max_width number | nil maximal width of floating window
 ---@field max_height number | nil maximal height of floating window
