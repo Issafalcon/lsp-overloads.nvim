@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.3.1...v1.4.0) (2024-04-13)
+
+
+### Features
+
+* **default-highlighting:** Adds default highlighting ([41dd5ca](https://github.com/Issafalcon/lsp-overloads.nvim/commit/41dd5ca60e4902a753eb5aa1d189798d3f26705b))
+
+
+### Bug Fixes
+
+* **content:** Updates signature content code ([fa0826b](https://github.com/Issafalcon/lsp-overloads.nvim/commit/fa0826b78275430c80800edf20da4387429b0df6))
+
 ## [1.3.1](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.3.0...v1.3.1) (2023-10-16)
 
 
