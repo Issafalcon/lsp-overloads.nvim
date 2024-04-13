@@ -78,7 +78,14 @@ the built-in `signatureHelper` LSP handler:
           floating_window_above_cur_line = false, -- Attempt to float the popup above the cursor position 
                                                  -- (note, if the height of the float would be greater than the space left above the cursor, it will default 
                                                  -- to placing the float below the cursor. The max_height option allows for finer tuning of this)
-          silent = true               -- Prevents noisy notifications (make false to help debug why signature isn't working)
+          silent = true,               -- Prevents noisy notifications (make false to help debug why signature isn't working)
+          -- Highlight options is null by default, but this just shows an example of how it can be used to modify the LspSignatureActiveParameter highlight property
+          highlight = {
+            italic = true,
+            bold = true,
+            fg = "#ffffff",
+            ... -- Other options accepted by the `val` parameter of vim.api.nvim_set_hl()
+          }
         },
         keymaps = {
           next_signature = "<C-j>",

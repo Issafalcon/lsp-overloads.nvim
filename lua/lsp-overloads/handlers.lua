@@ -6,6 +6,10 @@ local mappings = require("lsp-overloads.mappings")
 
 local M = {}
 
+if settings.current.ui.highlight then
+  vim.api.nvim_set_hl(0, "LspSignatureActiveParameter", settings.current.ui.highlight)
+end
+
 --- Helper function to prevent multiple signature popups from opening whilst entering a tuple argument.
 --- Makes the assumption that the language calls functions using parentheses, and tuples / argument lists are also enclosed in parentheses.
 ---@param line_to_cursor string The text contained in the line up to the current cursor position
