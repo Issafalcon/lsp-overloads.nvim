@@ -4,6 +4,12 @@ local SignatureContent = {
   active_hl = nil,
 }
 
+--- Taken from https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua#L896
+--- Convert a signature help to markdown lines with slight modification to display the Overloads count
+---@param signature_help
+---@param ft
+---@param triggers
+---@return
 local function convert_signature_help_to_markdown_lines(signature_help, ft, triggers)
   if not signature_help.signatures then
     return
@@ -29,11 +35,19 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
     -- wrap inside a code block so stylize_markdown can render it properly
     label = ("```%s\n%s\n```"):format(ft, label)
   end
-  vim.list_extend(contents, vim.split(label, "\n", true))
+  vim.list_extend(contents, vim.split(label, "\n", { plain = true, trimempty = true }))
+
   if signature.documentation then
+    -- if LSP returns plain string, we treat it as plaintext. This avoids
+    -- special characters like underscore or similar from being interpreted
+    -- as markdown font modifiers
+    if type(signature.documentation) == "string" then
+      signature.documentation = { kind = "plaintext", value = signature.documentation }
+    end
     vim.lsp.util.convert_input_to_markdown_lines(signature.documentation, contents)
   end
 
+  -- This is the modification to display the Overloads count
   if #signature_help.signatures > 1 then
     vim.list_extend(
       contents,
@@ -120,7 +134,7 @@ end
 function SignatureContent:add_content(signature)
   local client = vim.lsp.get_client_by_id(signature.ctx.client_id)
   local triggers = vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters")
-  local ft = vim.api.nvim_buf_get_option(signature.ctx.bufnr, "filetype")
+  local ft = vim.bo[signature.ctx.bufnr].filetype
 
   self.contents, self.active_hl = convert_signature_help_to_markdown_lines(signature, ft, triggers)
 
