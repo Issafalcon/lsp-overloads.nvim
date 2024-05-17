@@ -90,7 +90,7 @@ function Signature:add_mapping(mapName, default_lhs, rhs, opts)
   -- If we haven't, get it from the list of buf keymaps and store it, so that when the signature window is destroyed later,
   -- we can restore the users original keymapping.
   if self.original_buf_mappings[self.bufnr][config_lhs] == nil and vim.fn.mapcheck(config_lhs, self.mode) ~= "" then
-    local original_map = vim.fn.maparg(config_lhs, self.mode, 0, 1)
+    local original_map = vim.fn.maparg(config_lhs, self.mode, false, true)
     self.original_buf_mappings[self.bufnr][config_lhs] = original_map
   end
 
@@ -111,7 +111,9 @@ function Signature:remove_mappings(bufnr, mode)
       local original_buf_map = self.original_buf_mappings[bufnr][lhs]
 
       if original_buf_map ~= nil then
-        vim.fn.mapset(self.mode, 0, original_buf_map)
+        vim.api.nvim_buf_call(bufnr, function()
+          vim.fn.mapset(self.mode, false, original_buf_map)
+        end)
         self.original_buf_mappings[bufnr][lhs] = nil
       end
     end
