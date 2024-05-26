@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.4.0...v1.4.1) (2024-05-26)
+
+
+### Bug Fixes
+
+* wrap mapset() in nvim_buf_call ([caff3e5](https://github.com/Issafalcon/lsp-overloads.nvim/commit/caff3e5cff4ceaf41e0831c9dfa0020334b37d69))
+
 ## [1.4.0](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.3.1...v1.4.0) (2024-04-13)
 
 
