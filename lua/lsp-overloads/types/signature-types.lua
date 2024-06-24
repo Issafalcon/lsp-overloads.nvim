@@ -1,6 +1,7 @@
 ---@class SignatureContent
 ---@field contents table | nil The contents of the signature
 ---@field active_hl table | nil The active highlight of the signature
+---@field label_line integer The line of the signature's label, used for highlighting
 ---@field add_content function Adds the contents of the signature to the signature content object
 
 ---@class Signature

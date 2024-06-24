@@ -2,6 +2,7 @@
 local SignatureContent = {
   contents = {},
   active_hl = nil,
+  label_line = 0,
 }
 
 --- Taken from https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/util.lua#L896
@@ -145,6 +146,8 @@ function SignatureContent:add_content(signature)
     end
     return
   end
+
+  self.label_line = vim.startswith(self.contents[1], "```") and 1 or 0
 end
 
 return SignatureContent
