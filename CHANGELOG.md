@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.4.1...v1.5.0) (2024-06-27)
+
+
+### Features
+
+* **context:** add `label_line` ([7009b3b](https://github.com/Issafalcon/lsp-overloads.nvim/commit/7009b3b48ac016d649c006223635da7580303c2f))
+
+
+### Bug Fixes
+
+* **highlights:** Fixes formatting ([f036cc5](https://github.com/Issafalcon/lsp-overloads.nvim/commit/f036cc573ae840d6b15487f35f12caf6939956a1))
+
 ## [1.4.1](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.4.0...v1.4.1) (2024-05-26)
 
 
