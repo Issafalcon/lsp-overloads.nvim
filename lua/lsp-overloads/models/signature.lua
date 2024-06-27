@@ -144,7 +144,13 @@ function Signature:create_signature_popup()
   -- so keep track of new buffer and win numbers
   local fbuf, fwin = vim.lsp.util.open_floating_preview(self.signature_content.contents, "markdown", self.config)
   if self.signature_content.active_hl then
-    vim.api.nvim_buf_add_highlight(fbuf, -1, "LspSignatureActiveParameter", self.signature_content.label_line, unpack(self.signature_content.active_hl))
+    vim.api.nvim_buf_add_highlight(
+      fbuf,
+      -1,
+      "LspSignatureActiveParameter",
+      self.signature_content.label_line,
+      unpack(self.signature_content.active_hl)
+    )
   end
   local bufnr = vim.api.nvim_get_current_buf()
 
