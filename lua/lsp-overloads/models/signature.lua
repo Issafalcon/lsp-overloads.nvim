@@ -50,7 +50,19 @@ end
 function Signature:modify_active_param(param_mod)
   local current_sig_index = self.activeSignature + 1
 
-  if self.activeParameter then
+  -- LSP Specification says that this should be used in place of SignatureHelp.activeParameter if provided.
+  -- So we check for it first.
+  if self.signatures[current_sig_index].activeParameter then
+    local next_possible_param_idx = self.signatures[current_sig_index].activeParameter + (param_mod or 0)
+
+    if
+      next_possible_param_idx >= 0
+      and (#self.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
+    then
+      self.signatures[current_sig_index].activeParameter = next_possible_param_idx
+    end
+
+  elseif self.activeParameter then
     local next_possible_param_idx = self.activeParameter + (param_mod or 0)
 
     if
@@ -60,14 +72,13 @@ function Signature:modify_active_param(param_mod)
     then
       self.activeParameter = next_possible_param_idx
     end
-  else
-    local next_possible_param_idx = self.signatures[current_sig_index].activeParameter + (param_mod or 0)
-    if
-      next_possible_param_idx >= 0
-      and (#self.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
-    then
-      self.signatures[current_sig_index].activeParameter = next_possible_param_idx
-    end
+
+  -- If we have a list of parameters but no activeParameter (some language servers do this).
+  -- Then add it to the SignatureInformation so that cycling between them still works.
+  elseif self.signatures[current_sig_index].parameters
+    and #self.signatures[current_sig_index].parameters > 0 then
+    self.signatures[current_sig_index].activeParameter = 0
+    self:modify_active_param(param_mod)
   end
 end
 
