@@ -1,13 +1,13 @@
 ---@module "lsp-overloads.settings"
-local settings = require("lsp-overloads.settings")
-local Signature = require("lsp-overloads.models.signature")
-local autocommands = require("lsp-overloads.autocommands")
-local mappings = require("lsp-overloads.mappings")
+local settings = require('lsp-overloads.settings')
+local Signature = require('lsp-overloads.models.signature')
+local autocommands = require('lsp-overloads.autocommands')
+local mappings = require('lsp-overloads.mappings')
 
 local M = {}
 
 if settings.current.ui.highlight then
-  vim.api.nvim_set_hl(0, "LspSignatureActiveParameter", settings.current.ui.highlight)
+  vim.api.nvim_set_hl(0, 'LspSignatureActiveParameter', settings.current.ui.highlight)
 end
 
 --- Helper function to prevent multiple signature popups from opening whilst entering a tuple argument.
@@ -16,16 +16,16 @@ end
 ---@return boolean Whether or not the cursor is inside a tuple
 local function check_tuple(line_to_cursor)
   -- Quick return if there are no open parens (i.e. Not in a supported function call)
-  if not line_to_cursor:match("%(") then
+  if not line_to_cursor:match('%(') then
     return true
   end
 
   local open_parens = 0
   local closed_parens = 0
-  for _ in line_to_cursor:gmatch("%(") do
+  for _ in line_to_cursor:gmatch('%(') do
     open_parens = open_parens + 1
   end
-  for _ in line_to_cursor:gmatch("%)") do
+  for _ in line_to_cursor:gmatch('%)') do
     closed_parens = closed_parens + 1
   end
 
@@ -44,13 +44,13 @@ local check_trigger_char = function(line_to_cursor, triggers)
     local current_char = line_to_cursor:sub(#line_to_cursor, #line_to_cursor)
     local prev_char = line_to_cursor:sub(#line_to_cursor - 1, #line_to_cursor - 1)
     if current_char == trigger_char then
-      if trigger_char == "," then
+      if trigger_char == ',' then
         return check_tuple(line_to_cursor)
       end
       return true
     end
-    if current_char == " " and prev_char == trigger_char then
-      if trigger_char == "," then
+    if current_char == ' ' and prev_char == trigger_char then
+      if trigger_char == ',' then
         return check_tuple(line_to_cursor)
       end
       return true
@@ -61,6 +61,7 @@ end
 
 M.signature_handler = function(err, result, ctx, config)
   if result == nil then
+    M.curent_signature = nil
     return
   end
 
@@ -68,8 +69,9 @@ M.signature_handler = function(err, result, ctx, config)
   -- If the completion item doesn't have signatures It will make noise. Change to use `print` that can use `<silent>` to ignore
   if not (result and result.signatures and result.signatures[1]) then
     if config and config.silent ~= true then
-      vim.notify("No signature help available")
+      vim.notify('No signature help available')
     end
+    M.curent_signature = nil
     return
   end
 
@@ -82,6 +84,7 @@ M.signature_handler = function(err, result, ctx, config)
 
   autocommands.setup_signature_augroup(signature)
   mappings.add_signature_mappings(signature)
+  M.curent_signature = signature
 end
 
 --- Opens the signature help popup for the current line
@@ -95,8 +98,8 @@ M.open_signature = function(clients, bypass_trigger)
     local triggers = client.server_capabilities.signatureHelpProvider.triggerCharacters
 
     -- csharp has wrong trigger chars for some odd reason
-    if client.name == "csharp" then
-      triggers = { "(", "," }
+    if client.name == 'csharp' then
+      triggers = { '(', ',' }
     end
 
     local pos = vim.api.nvim_win_get_cursor(0)
@@ -112,7 +115,7 @@ M.open_signature = function(clients, bypass_trigger)
     local params = vim.lsp.util.make_position_params()
     vim.lsp.buf_request(
       0,
-      "textDocument/signatureHelp",
+      'textDocument/signatureHelp',
       params,
       vim.lsp.with(M.signature_handler, {
         border = settings.current.ui.border,
@@ -131,6 +134,13 @@ M.open_signature = function(clients, bypass_trigger)
         floating_window_above_cur_line = settings.current.ui.floating_window_above_cur_line,
       })
     )
+  else
+    if M.curent_signature then
+      local current_line = vim.api.nvim_get_current_line()
+      if not current_line:find('%(') then
+        M.curent_signature:close_signature_popup()
+      end
+    end
   end
 end
 

@@ -321,9 +321,11 @@ end
 
 function Signature:close_signature_popup()
   -- Close the window here, which will trigger the autocommand to remove the mappings and dispose of the signature object
-  vim.schedule(function()
-    vim.api.nvim_win_close(self.fwin, true)
-  end)
+  if self.fwin and api.nvim_win_is_valid(self.fwin) then
+    vim.schedule(function()
+      vim.api.nvim_win_close(self.fwin, true)
+    end)
+  end
 end
 
 return Signature

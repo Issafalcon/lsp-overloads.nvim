@@ -1,5 +1,5 @@
-local settings = require("lsp-overloads.settings")
-local autocommands = require("lsp-overloads.autocommands")
+local settings = require('lsp-overloads.settings')
+local autocommands = require('lsp-overloads.autocommands')
 
 local M = {}
 
@@ -19,7 +19,7 @@ local function modify_signature(opts)
 
     -- TODO: Make the variable name a constant somewhere
     -- Set this variable to indicate that the signature popup is swapping overloads, so don't delete the signature object.
-    vim.api.nvim_buf_set_var(opts.signature.bufnr, "is_swapping_overload", opts.signature.fwin)
+    vim.api.nvim_buf_set_var(opts.signature.bufnr, 'is_swapping_overload', opts.signature.fwin)
 
     opts.signature:create_signature_popup()
 
@@ -33,30 +33,30 @@ end
 
 function M.add_signature_mappings(signature)
   signature:add_mapping(
-    "sig_next",
+    'sig_next',
     settings.current.keymaps.next_signature,
     modify_signature,
     { signature = signature, sig_modifier = 1, param_modifier = 0 }
   )
   signature:add_mapping(
-    "sig_prev",
+    'sig_prev',
     settings.current.keymaps.previous_signature,
     modify_signature,
     { signature = signature, sig_modifier = -1, param_modifier = 0 }
   )
   signature:add_mapping(
-    "param_next",
+    'param_next',
     settings.current.keymaps.next_parameter,
     modify_signature,
     { signature = signature, sig_modifier = 0, param_modifier = 1 }
   )
   signature:add_mapping(
-    "param_prev",
+    'param_prev',
     settings.current.keymaps.previous_parameter,
     modify_signature,
     { signature = signature, sig_modifier = 0, param_modifier = -1 }
   )
-  signature:add_mapping("close", settings.current.keymaps.close_signature, close_signature, { signature = signature })
+  signature:add_mapping('close', settings.current.keymaps.close_signature, close_signature, { signature = signature })
 end
 
 return M
