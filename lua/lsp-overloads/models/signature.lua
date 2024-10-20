@@ -30,6 +30,7 @@ function Signature:update_with_lsp_response(err, ctx, config)
   self.ctx = ctx
   self.config = config
 end
+
 --- Checks the current active signature exists. If it does,
 -- moves to the next or previous signature in the list (without going out of bounds).
 ---@param sig_mod? number Negative to move to the previous signature, positive to move to the next signature. Defaults to 0
@@ -54,17 +55,17 @@ function Signature:modify_active_param(param_mod)
     local next_possible_param_idx = self.activeParameter + (param_mod or 0)
 
     if
-      next_possible_param_idx >= 0
-      and self.signatures[current_sig_index] ~= nil
-      and (#self.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
+        next_possible_param_idx >= 0
+        and self.signatures[current_sig_index] ~= nil
+        and (#self.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
     then
       self.activeParameter = next_possible_param_idx
     end
   else
     local next_possible_param_idx = self.signatures[current_sig_index].activeParameter + (param_mod or 0)
     if
-      next_possible_param_idx >= 0
-      and (#self.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
+        next_possible_param_idx >= 0
+        and (#self.signatures[current_sig_index].parameters - 1) >= next_possible_param_idx
     then
       self.signatures[current_sig_index].activeParameter = next_possible_param_idx
     end
@@ -122,27 +123,179 @@ function Signature:remove_mappings(bufnr, mode)
   self.mappings = {}
 end
 
-function Signature:create_signature_popup()
-  self.signature_content:add_content(self)
+local api = vim.api
+local npcall = vim.F.npcall
+local validate = vim.validate
 
-  -- Try and place the floating window above the cursor. If there is not enough room,
-  -- fallback to the default behaviour of nvim_open_win
-  if self.config.floating_window_above_cur_line then
-    local _, height = vim.lsp.util._make_floating_popup_size(self.signature_content.contents, self.config)
+local function find_window_by_var(name, value)
+  for _, win in ipairs(api.nvim_list_wins()) do
+    if npcall(api.nvim_win_get_var, win, name) == value then
+      return win
+    end
+  end
+end
 
-    local lines_above = vim.fn.winline() - 1
-    local is_lower_win_half = lines_above > math.floor(vim.fn.winheight(0) / 2)
+--- Closes the preview window
+---
+---@param winnr integer window id of preview window
+---@param bufnrs table|nil optional list of ignored buffers
+local function close_preview_window(winnr, bufnrs)
+  vim.schedule(function()
+    -- exit if we are in one of ignored buffers
+    if bufnrs and vim.list_contains(bufnrs, api.nvim_get_current_buf()) then
+      return
+    end
 
-    -- If the cursor is in the lower half of the window,
-    -- the standard functionality will already offset the popup to be above the cursor, so we don't neeed to do it again.
-    if lines_above > height and not is_lower_win_half then
-      self.config.offset_y = -height - 3 -- -3 brings the bottom of the popup above the current line
+    local augroup = "preview_window_" .. winnr
+    pcall(api.nvim_del_augroup_by_name, augroup)
+    pcall(api.nvim_win_close, winnr, true)
+  end)
+end
+
+local function close_preview_autocmd(events, winnr, bufnrs)
+  local augroup = api.nvim_create_augroup("preview_window_" .. winnr, {
+    clear = true,
+  })
+
+  -- close the preview window when entered a buffer that is not
+  -- the floating window buffer or the buffer that spawned it
+  api.nvim_create_autocmd("BufEnter", {
+    group = augroup,
+    callback = function()
+      close_preview_window(winnr, bufnrs)
+    end,
+  })
+
+  if #events > 0 then
+    api.nvim_create_autocmd(events, {
+      group = augroup,
+      buffer = bufnrs[2],
+      callback = function()
+        close_preview_window(winnr)
+      end,
+    })
+  end
+end
+
+local function open_floating_preview(contents, syntax, opts)
+  validate({
+    contents = { contents, "t" },
+    syntax = { syntax, "s", true },
+    opts = { opts, "t", true },
+  })
+  opts = opts or {}
+  opts.wrap = opts.wrap ~= false -- wrapping by default
+  opts.focus = opts.focus ~= false
+  opts.close_events = opts.close_events or { "CursorMoved", "CursorMovedI", "InsertCharPre" }
+
+  local bufnr = api.nvim_get_current_buf()
+
+  -- check if this popup is focusable and we need to focus
+  if opts.focus_id and opts.focusable ~= false and opts.focus then
+    -- Go back to previous window if we are in a focusable one
+    local current_winnr = api.nvim_get_current_win()
+    if npcall(api.nvim_win_get_var, current_winnr, opts.focus_id) then
+      api.nvim_command("wincmd p")
+      return bufnr, current_winnr
+    end
+    do
+      local win = find_window_by_var(opts.focus_id, bufnr)
+      if win and api.nvim_win_is_valid(win) and vim.fn.pumvisible() == 0 then
+        -- focus and return the existing buf, win
+        api.nvim_set_current_win(win)
+        api.nvim_command("stopinsert")
+        return api.nvim_win_get_buf(win), win
+      end
     end
   end
 
+  -- check if another floating preview already exists for this buffer
+  -- and close it if needed
+  local existing_winnr = npcall(api.nvim_buf_get_var, bufnr, "lsp_floating_preview")
+  local floating_winnr
+  local floating_bufnr
+  local modifying = false
+  if existing_winnr and api.nvim_win_is_valid(existing_winnr) then
+    floating_winnr = existing_winnr
+    floating_bufnr = vim.api.nvim_win_get_buf(floating_winnr)
+    modifying = true
+  end
+
+  if not modifying then
+    -- Create the buffer
+    floating_bufnr = api.nvim_create_buf(false, true)
+  end
+
+  -- Set up the contents, using treesitter for markdown
+  local do_stylize = syntax == "markdown" and vim.g.syntax_on ~= nil
+  if do_stylize then
+    local width = vim.lsp.util._make_floating_popup_size(contents, opts)
+    contents = vim.lsp.util._normalize_markdown(contents, { width = width })
+    vim.bo[floating_bufnr].filetype = "markdown"
+    vim.treesitter.start(floating_bufnr)
+    api.nvim_buf_set_lines(floating_bufnr, 0, -1, false, contents)
+  else
+    -- Clean up input: trim empty lines
+    contents = vim.split(table.concat(contents, "\n"), "\n", { trimempty = true })
+
+    if syntax then
+      vim.bo[floating_bufnr].syntax = syntax
+    end
+    api.nvim_buf_set_lines(floating_bufnr, 0, -1, true, contents)
+  end
+
+  -- Compute size of float needed to show (wrapped) lines
+  if opts.wrap then
+    opts.wrap_at = opts.wrap_at or api.nvim_win_get_width(0)
+  else
+    opts.wrap_at = nil
+  end
+  local width, height = vim.lsp.util._make_floating_popup_size(contents, opts)
+
+  local float_option = vim.lsp.util.make_floating_popup_options(width, height, opts)
+  if not modifying then
+    floating_winnr = api.nvim_open_win(floating_bufnr, false, float_option)
+  else
+    vim.api.nvim_win_set_config(floating_winnr, float_option)
+  end
+
+  if do_stylize then
+    vim.wo[floating_winnr].conceallevel = 2
+  end
+  -- disable folding
+  vim.wo[floating_winnr].foldenable = false
+  -- soft wrapping
+  vim.wo[floating_winnr].wrap = opts.wrap
+
+  vim.bo[floating_bufnr].bufhidden = "wipe"
+
+  api.nvim_buf_set_keymap(
+    floating_bufnr,
+    "n",
+    "q",
+    "<cmd>bdelete<cr>",
+    { silent = true, noremap = true, nowait = true }
+  )
+  close_preview_autocmd(opts.close_events, floating_winnr, { floating_bufnr, bufnr })
+
+  -- save focus_id
+  if opts.focus_id then
+    api.nvim_win_set_var(floating_winnr, opts.focus_id, bufnr)
+  end
+  api.nvim_buf_set_var(bufnr, "lsp_floating_preview", floating_winnr)
+
+  return floating_bufnr, floating_winnr
+end
+
+function Signature:create_signature_popup()
+  self.signature_content:add_content(self)
+
+  local _, height = vim.lsp.util._make_floating_popup_size(self.signature_content.contents, self.config)
+  self.config.offset_y = -height - 3 -- -3 brings the bottom of the popup above the current line
+
   -- This will replace the existing lsp signature popup if it existsk with a new one.
   -- so keep track of new buffer and win numbers
-  local fbuf, fwin = vim.lsp.util.open_floating_preview(self.signature_content.contents, "markdown", self.config)
+  local fbuf, fwin = open_floating_preview(self.signature_content.contents, "markdown", self.config)
   if self.signature_content.active_hl then
     vim.api.nvim_buf_add_highlight(
       fbuf,
