@@ -178,11 +178,6 @@ local function close_preview_autocmd(events, winnr, bufnrs)
 end
 
 local function open_floating_preview(contents, syntax, opts)
-  validate({
-    contents = { contents, "t" },
-    syntax = { syntax, "s", true },
-    opts = { opts, "t", true },
-  })
   opts = opts or {}
   opts.wrap = opts.wrap ~= false -- wrapping by default
   opts.focus = opts.focus ~= false
@@ -211,10 +206,10 @@ local function open_floating_preview(contents, syntax, opts)
 
   -- check if another floating preview already exists for this buffer
   -- and close it if needed
-  local existing_winnr = npcall(api.nvim_buf_get_var, bufnr, "lsp_floating_preview")
   local floating_winnr
   local floating_bufnr
   local modifying = false
+  local existing_winnr = npcall(api.nvim_buf_get_var, bufnr, "lsp_floating_preview")
   if existing_winnr and api.nvim_win_is_valid(existing_winnr) then
     floating_winnr = existing_winnr
     floating_bufnr = vim.api.nvim_win_get_buf(floating_winnr)
@@ -222,7 +217,6 @@ local function open_floating_preview(contents, syntax, opts)
   end
 
   if not modifying then
-    -- Create the buffer
     floating_bufnr = api.nvim_create_buf(false, true)
   end
 
@@ -231,8 +225,12 @@ local function open_floating_preview(contents, syntax, opts)
   if do_stylize then
     local width = vim.lsp.util._make_floating_popup_size(contents, opts)
     contents = vim.lsp.util._normalize_markdown(contents, { width = width })
-    vim.bo[floating_bufnr].filetype = "markdown"
-    vim.treesitter.start(floating_bufnr)
+    if not modifying then
+      vim.defer_fn(function()
+        vim.bo[floating_bufnr].filetype = vim.bo[bufnr].filetype
+        vim.treesitter.start(floating_bufnr)
+      end, 1)
+    end
     api.nvim_buf_set_lines(floating_bufnr, 0, -1, false, contents)
   else
     -- Clean up input: trim empty lines
@@ -269,14 +267,16 @@ local function open_floating_preview(contents, syntax, opts)
 
   vim.bo[floating_bufnr].bufhidden = "wipe"
 
-  api.nvim_buf_set_keymap(
-    floating_bufnr,
-    "n",
-    "q",
-    "<cmd>bdelete<cr>",
-    { silent = true, noremap = true, nowait = true }
-  )
-  close_preview_autocmd(opts.close_events, floating_winnr, { floating_bufnr, bufnr })
+  if not modifying then
+    api.nvim_buf_set_keymap(
+      floating_bufnr,
+      "n",
+      "q",
+      "<cmd>bdelete<cr>",
+      { silent = true, noremap = true, nowait = true }
+    )
+    close_preview_autocmd(opts.close_events, floating_winnr, { floating_bufnr, bufnr })
+  end
 
   -- save focus_id
   if opts.focus_id then

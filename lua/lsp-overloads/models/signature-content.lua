@@ -32,10 +32,6 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
     return
   end
   local label = signature.label
-  if ft then
-    -- wrap inside a code block so stylize_markdown can render it properly
-    label = ("```%s\n%s\n```"):format(ft, label)
-  end
   vim.list_extend(contents, vim.split(label, "\n", { plain = true, trimempty = true }))
 
   if signature.documentation then
