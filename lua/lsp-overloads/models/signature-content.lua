@@ -129,7 +129,8 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
       end
     end
   end
-  return contents, active_hl, signature.documentation.label_line or 0
+
+  return contents, active_hl, (signature and signature.documentation) and signature.documentation.label_line or 0
 end
 
 local function trim_empty_lines(lines)
