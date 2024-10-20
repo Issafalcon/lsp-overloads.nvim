@@ -1,7 +1,7 @@
 ---@module "lsp-overloads.settings"
-local settings = require("lsp-overloads.settings")
+local settings = require('lsp-overloads.settings')
 ---@module "lsp-overloads.handlers"
-local handlers = require("lsp-overloads.handlers")
+local handlers = require('lsp-overloads.handlers')
 
 local M = {}
 
@@ -18,16 +18,16 @@ function M.setup(client, config)
 
   table.insert(clients, client)
 
-  local group = augroup("LspSignature", { clear = false })
-  vim.api.nvim_clear_autocmds({ group = group, pattern = "<buffer>" })
-  autocmd("TextChangedI", {
+  local group = augroup('LspSignature', { clear = false })
+  vim.api.nvim_clear_autocmds({ group = group, pattern = '<buffer>' })
+  autocmd('TextChangedI', {
     group = group,
-    pattern = "<buffer>",
+    pattern = '<buffer>',
     callback = function()
       -- Guard against spamming of method not supported after
       -- stopping a language server with LspStop
       if settings.current.display_automatically then
-        local active_clients = vim.lsp.get_active_clients()
+        local active_clients = vim.lsp.get_clients()
         if #active_clients < 1 then
           return
         end
@@ -36,7 +36,7 @@ function M.setup(client, config)
     end,
   })
 
-  require("lsp-overloads.api.commands")
+  require('lsp-overloads.api.commands')
 end
 
 return M

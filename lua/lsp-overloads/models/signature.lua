@@ -1,5 +1,5 @@
 ---@module "lsp-overloads.models.signature-content"
-local SignatureContent = require("lsp-overloads.models.signature-content")
+local SignatureContent = require('lsp-overloads.models.signature-content')
 
 ---@class Signature
 local Signature = {
@@ -26,7 +26,7 @@ end
 
 function Signature:update_with_lsp_response(err, ctx, config)
   self.err = err
-  self.mode = vim.api.nvim_get_mode()["mode"]
+  self.mode = vim.api.nvim_get_mode()['mode']
   self.ctx = ctx
   self.config = config
 end
@@ -90,7 +90,7 @@ function Signature:add_mapping(mapName, default_lhs, rhs, opts)
   -- Check if we have already stored the users original keymapping value before
   -- If we haven't, get it from the list of buf keymaps and store it, so that when the signature window is destroyed later,
   -- we can restore the users original keymapping.
-  if self.original_buf_mappings[self.bufnr][config_lhs] == nil and vim.fn.mapcheck(config_lhs, self.mode) ~= "" then
+  if self.original_buf_mappings[self.bufnr][config_lhs] == nil and vim.fn.mapcheck(config_lhs, self.mode) ~= '' then
     local original_map = vim.fn.maparg(config_lhs, self.mode, false, true)
     self.original_buf_mappings[self.bufnr][config_lhs] = original_map
   end
@@ -146,20 +146,20 @@ local function close_preview_window(winnr, bufnrs)
       return
     end
 
-    local augroup = "preview_window_" .. winnr
+    local augroup = 'preview_window_' .. winnr
     pcall(api.nvim_del_augroup_by_name, augroup)
     pcall(api.nvim_win_close, winnr, true)
   end)
 end
 
 local function close_preview_autocmd(events, winnr, bufnrs)
-  local augroup = api.nvim_create_augroup("preview_window_" .. winnr, {
+  local augroup = api.nvim_create_augroup('preview_window_' .. winnr, {
     clear = true,
   })
 
   -- close the preview window when entered a buffer that is not
   -- the floating window buffer or the buffer that spawned it
-  api.nvim_create_autocmd("BufEnter", {
+  api.nvim_create_autocmd('BufEnter', {
     group = augroup,
     callback = function()
       close_preview_window(winnr, bufnrs)
@@ -181,7 +181,7 @@ local function open_floating_preview(contents, syntax, opts)
   opts = opts or {}
   opts.wrap = opts.wrap ~= false -- wrapping by default
   opts.focus = opts.focus ~= false
-  opts.close_events = opts.close_events or { "CursorMoved", "CursorMovedI", "InsertCharPre" }
+  opts.close_events = opts.close_events or { 'CursorMoved', 'CursorMovedI', 'InsertCharPre' }
 
   local bufnr = api.nvim_get_current_buf()
 
@@ -190,7 +190,7 @@ local function open_floating_preview(contents, syntax, opts)
     -- Go back to previous window if we are in a focusable one
     local current_winnr = api.nvim_get_current_win()
     if npcall(api.nvim_win_get_var, current_winnr, opts.focus_id) then
-      api.nvim_command("wincmd p")
+      api.nvim_command('wincmd p')
       return bufnr, current_winnr
     end
     do
@@ -198,7 +198,7 @@ local function open_floating_preview(contents, syntax, opts)
       if win and api.nvim_win_is_valid(win) and vim.fn.pumvisible() == 0 then
         -- focus and return the existing buf, win
         api.nvim_set_current_win(win)
-        api.nvim_command("stopinsert")
+        api.nvim_command('stopinsert')
         return api.nvim_win_get_buf(win), win
       end
     end
@@ -209,7 +209,7 @@ local function open_floating_preview(contents, syntax, opts)
   local floating_winnr
   local floating_bufnr
   local modifying = false
-  local existing_winnr = npcall(api.nvim_buf_get_var, bufnr, "lsp_floating_preview")
+  local existing_winnr = npcall(api.nvim_buf_get_var, bufnr, 'lsp_floating_preview')
   if existing_winnr and api.nvim_win_is_valid(existing_winnr) then
     floating_winnr = existing_winnr
     floating_bufnr = vim.api.nvim_win_get_buf(floating_winnr)
@@ -221,7 +221,7 @@ local function open_floating_preview(contents, syntax, opts)
   end
 
   -- Set up the contents, using treesitter for markdown
-  local do_stylize = syntax == "markdown" and vim.g.syntax_on ~= nil
+  local do_stylize = syntax == 'markdown' and vim.g.syntax_on ~= nil
   if do_stylize then
     local width = vim.lsp.util._make_floating_popup_size(contents, opts)
     contents = vim.lsp.util._normalize_markdown(contents, { width = width })
@@ -234,7 +234,7 @@ local function open_floating_preview(contents, syntax, opts)
     api.nvim_buf_set_lines(floating_bufnr, 0, -1, false, contents)
   else
     -- Clean up input: trim empty lines
-    contents = vim.split(table.concat(contents, "\n"), "\n", { trimempty = true })
+    contents = vim.split(table.concat(contents, '\n'), '\n', { trimempty = true })
 
     if syntax then
       vim.bo[floating_bufnr].syntax = syntax
@@ -265,14 +265,14 @@ local function open_floating_preview(contents, syntax, opts)
   -- soft wrapping
   vim.wo[floating_winnr].wrap = opts.wrap
 
-  vim.bo[floating_bufnr].bufhidden = "wipe"
+  vim.bo[floating_bufnr].bufhidden = 'wipe'
 
   if not modifying then
     api.nvim_buf_set_keymap(
       floating_bufnr,
-      "n",
-      "q",
-      "<cmd>bdelete<cr>",
+      'n',
+      'q',
+      '<cmd>bdelete<cr>',
       { silent = true, noremap = true, nowait = true }
     )
     close_preview_autocmd(opts.close_events, floating_winnr, { floating_bufnr, bufnr })
@@ -282,7 +282,7 @@ local function open_floating_preview(contents, syntax, opts)
   if opts.focus_id then
     api.nvim_win_set_var(floating_winnr, opts.focus_id, bufnr)
   end
-  api.nvim_buf_set_var(bufnr, "lsp_floating_preview", floating_winnr)
+  api.nvim_buf_set_var(bufnr, 'lsp_floating_preview', floating_winnr)
 
   return floating_bufnr, floating_winnr
 end
@@ -303,12 +303,12 @@ function Signature:create_signature_popup()
 
   -- This will replace the existing lsp signature popup if it existsk with a new one.
   -- so keep track of new buffer and win numbers
-  local fbuf, fwin = open_floating_preview(self.signature_content.contents, "markdown", self.config)
+  local fbuf, fwin = open_floating_preview(self.signature_content.contents, 'markdown', self.config)
   if self.signature_content.active_hl then
     vim.api.nvim_buf_add_highlight(
       fbuf,
       -1,
-      "LspSignatureActiveParameter",
+      'LspSignatureActiveParameter',
       self.signature_content.label_line,
       unpack(self.signature_content.active_hl)
     )

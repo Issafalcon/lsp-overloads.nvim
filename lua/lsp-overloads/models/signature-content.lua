@@ -31,24 +31,35 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
   if not signature then
     return
   end
-  local label = signature.label
-  vim.list_extend(contents, vim.split(label, "\n", { plain = true, trimempty = true }))
 
+  local label_line = 0
   if signature.documentation then
     -- if LSP returns plain string, we treat it as plaintext. This avoids
     -- special characters like underscore or similar from being interpreted
     -- as markdown font modifiers
-    if type(signature.documentation) == "string" then
-      signature.documentation = { kind = "plaintext", value = signature.documentation }
+    if type(signature.documentation) == 'string' then
+      signature.documentation = { kind = 'plaintext', value = signature.documentation }
     end
+
+    local documentation = { '/**' }
+    for line in signature.documentation.value:gmatch('[^\n]+') do
+      table.insert(documentation, ' * ' .. line)
+    end
+    table.insert(documentation, ' */')
+
+    label_line = #documentation
+    signature.documentation.value = table.concat(documentation, '\n')
     vim.lsp.util.convert_input_to_markdown_lines(signature.documentation, contents)
   end
+
+  local label = signature.label
+  vim.list_extend(contents, vim.split(label, '\n', { plain = true, trimempty = true }))
 
   -- This is the modification to display the Overloads count
   if #signature_help.signatures > 1 then
     vim.list_extend(
       contents,
-      { "(Overload " .. active_signature + 1 .. " of " .. #signature_help.signatures .. ")", "" }
+      { '(Overload ' .. active_signature + 1 .. ' of ' .. #signature_help.signatures .. ')', '' }
     )
   end
 
@@ -85,7 +96,7 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
       }
       --]=]
       if parameter.label then
-        if type(parameter.label) == "table" then
+        if type(parameter.label) == 'table' then
           active_hl = parameter.label
         else
           local offset = 1
@@ -114,7 +125,25 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
       end
     end
   end
-  return contents, active_hl
+  return contents, active_hl, label_line
+end
+
+local function trim_empty_lines(lines)
+  local start = 1
+  for i = 1, #lines do
+    if lines[i] ~= nil and #lines[i] > 0 then
+      start = i
+      break
+    end
+  end
+  local finish = 1
+  for i = #lines, 1, -1 do
+    if lines[i] ~= nil and #lines[i] > 0 then
+      finish = i
+      break
+    end
+  end
+  return vim.list_extend({}, lines, start, finish)
 end
 
 --- Create a new SignatureContent object
@@ -130,20 +159,18 @@ end
 ---@param signature Signature The signature object to modify the contents for
 function SignatureContent:add_content(signature)
   local client = vim.lsp.get_client_by_id(signature.ctx.client_id)
-  local triggers = vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters")
+  local triggers = vim.tbl_get(client.server_capabilities, 'signatureHelpProvider', 'triggerCharacters')
   local ft = vim.bo[signature.ctx.bufnr].filetype
 
-  self.contents, self.active_hl = convert_signature_help_to_markdown_lines(signature, ft, triggers)
+  self.contents, self.active_hl, self.label_line = convert_signature_help_to_markdown_lines(signature, ft, triggers)
 
-  self.contents = vim.lsp.util.trim_empty_lines(self.contents)
+  self.contents = trim_empty_lines(self.contents)
   if vim.tbl_isempty(self.contents) then
     if signature.config.silent ~= true then
-      print("No signature help available")
+      print('No signature help available')
     end
     return
   end
-
-  self.label_line = vim.startswith(self.contents[1], "```") and 1 or 0
 end
 
 return SignatureContent
