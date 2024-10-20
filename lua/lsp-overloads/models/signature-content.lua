@@ -32,7 +32,6 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
     return
   end
 
-  local label_line = 0
   if signature.documentation then
     -- if LSP returns plain string, we treat it as plaintext. This avoids
     -- special characters like underscore or similar from being interpreted
@@ -41,14 +40,19 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
       signature.documentation = { kind = 'plaintext', value = signature.documentation }
     end
 
-    local documentation = { '/**' }
-    for line in signature.documentation.value:gmatch('[^\n]+') do
-      table.insert(documentation, ' * ' .. line)
-    end
-    table.insert(documentation, ' */')
+    local comment_beginning = ft == 'lua' and '-- ' or '/**'
+    if string.sub(signature.documentation.value, 1, 3) ~= comment_beginning then
+      local documentation = ft == 'lua' and {} or { '/**' }
+      for line in signature.documentation.value:gmatch('[^\n]+') do
+        table.insert(documentation, (ft ~= 'lua' and ' * ' or '-- ') .. line)
+      end
+      if ft ~= 'lua' then
+        table.insert(documentation, ' */')
+      end
 
-    label_line = #documentation
-    signature.documentation.value = table.concat(documentation, '\n')
+      signature.documentation.value = table.concat(documentation, '\n')
+      signature.documentation.label_line = #documentation
+    end
     vim.lsp.util.convert_input_to_markdown_lines(signature.documentation, contents)
   end
 
@@ -125,7 +129,7 @@ local function convert_signature_help_to_markdown_lines(signature_help, ft, trig
       end
     end
   end
-  return contents, active_hl, label_line
+  return contents, active_hl, signature.documentation.label_line or 0
 end
 
 local function trim_empty_lines(lines)
