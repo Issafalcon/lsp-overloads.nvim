@@ -291,7 +291,15 @@ function Signature:create_signature_popup()
   self.signature_content:add_content(self)
 
   local _, height = vim.lsp.util._make_floating_popup_size(self.signature_content.contents, self.config)
-  self.config.offset_y = -height - 3 -- -3 brings the bottom of the popup above the current line
+
+  local lines_above = vim.fn.winline() - 1
+  local is_lower_win_half = lines_above > math.floor(vim.fn.winheight(0) / 2)
+
+  -- If the cursor is in the lower half of the window,
+  -- the standard functionality will already offset the popup to be above the cursor, so we don't neeed to do it again.
+  if lines_above > height and not is_lower_win_half then
+    self.config.offset_y = -height - 3 -- -3 brings the bottom of the popup above the current line
+  end
 
   -- This will replace the existing lsp signature popup if it existsk with a new one.
   -- so keep track of new buffer and win numbers
