@@ -1,5 +1,5 @@
 local function lsp_overloads_signature()
-  local lsp_clients = vim.lsp.get_active_clients()
+  local lsp_clients = (vim.lsp.get_clients or vim.lsp.get_active_clients)()
 
   local clients = {}
   if #lsp_clients < 1 then
