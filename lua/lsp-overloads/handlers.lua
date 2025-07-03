@@ -109,7 +109,9 @@ M.open_signature = function(clients, bypass_trigger)
   end
 
   if triggered then
-    local params = vim.lsp.util.make_position_params()
+    local win = vim.api.nvim_get_current_win()
+    local enc = (vim.lsp.get_clients({ bufnr = 0 })[1]).offset_encoding
+    local params = vim.lsp.util.make_position_params(win, enc)
     vim.lsp.buf_request(
       0,
       "textDocument/signatureHelp",
