@@ -139,7 +139,14 @@ function SignatureContent:add_content(signature)
 
   self.contents, self.active_hl = convert_signature_help_to_markdown_lines(signature, ft, triggers)
 
-  self.contents = vim.lsp.util.trim_empty_lines(self.contents)
+  if type(self.contents) == "table" then
+    self.contents = vim.split(
+      table.concat(self.contents, "\n"),
+      "\n",
+      { trimempty = true }
+    )
+  end
+
   if vim.tbl_isempty(self.contents) then
     if signature.config.silent ~= true then
       print("No signature help available")
