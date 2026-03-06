@@ -3,6 +3,8 @@
 ---@field previous_signature string
 ---@field next_parameter string
 ---@field previous_parameter string
+---@field scroll_docs_down string
+---@field scroll_docs_up string
 ---@field close_signature string
 
 ---@class LspOverloadsUiOpts

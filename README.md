@@ -92,6 +92,8 @@ the built-in `signatureHelper` LSP handler:
           previous_signature = "<C-k>",
           next_parameter = "<C-l>",
           previous_parameter = "<C-h>",
+          scroll_docs_down = "<A-j>",
+          scroll_docs_up = "<A-k>",
           close_signature = "<A-s>"
         },
         display_automatically = true -- Uses trigger characters to automatically display the signature overloads when typing a method signature
@@ -150,6 +152,8 @@ The default mappings are used to navigate between various signature overloads an
 - `previous_signature = "<C-k>"`
 - `next_parameter = "<C-l>"`
 - `previous_parameter = "<C-h>"`
+- `scroll_docs_down = "<A-j>"`
+- `scroll_docs_up = "<A-k>"`
 - `close_signature = "<A-s>"`
 
 **NOTE: If you already have a keybinding that matches one of the above, it will only get overwritten when the signature popup is open. When the popup is closed, your original keybinding will be restored in the buffer. If you still need to keep your original mappings while the signature popup is open, you will need to modify these bindings so they no longer conflict** 

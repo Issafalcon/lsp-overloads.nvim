@@ -24,6 +24,8 @@ local DEFAULT_SETTINGS = {
     previous_signature = "<C-k>",
     next_parameter = "<C-l>",
     previous_parameter = "<C-h>",
+    scroll_docs_down = "<A-j>",
+    scroll_docs_up = "<A-k>",
     close_signature = "<A-s>",
   },
   display_automatically = true,

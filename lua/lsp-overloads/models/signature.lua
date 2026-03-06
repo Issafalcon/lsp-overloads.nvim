@@ -61,7 +61,6 @@ function Signature:modify_active_param(param_mod)
     then
       self.signatures[current_sig_index].activeParameter = next_possible_param_idx
     end
-
   elseif self.activeParameter then
     local next_possible_param_idx = self.activeParameter + (param_mod or 0)
 
@@ -75,8 +74,7 @@ function Signature:modify_active_param(param_mod)
 
   -- If we have a list of parameters but no activeParameter (some language servers do this).
   -- Then add it to the SignatureInformation so that cycling between them still works.
-  elseif self.signatures[current_sig_index].parameters
-    and #self.signatures[current_sig_index].parameters > 0 then
+  elseif self.signatures[current_sig_index].parameters and #self.signatures[current_sig_index].parameters > 0 then
     self.signatures[current_sig_index].activeParameter = 0
     self:modify_active_param(param_mod)
   end
@@ -165,6 +163,7 @@ function Signature:create_signature_popup()
   end
   local bufnr = vim.api.nvim_get_current_buf()
 
+  self.fbuf = fbuf
   self.bufnr = bufnr
   self.fwin = fwin
 end

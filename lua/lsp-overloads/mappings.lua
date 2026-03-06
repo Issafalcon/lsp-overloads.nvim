@@ -31,6 +31,48 @@ local function close_signature(opts)
   opts.signature:close_signature_popup()
 end
 
+local function scroll_docs(opts)
+  local direction = opts.direction
+  if direction ~= "down" and direction ~= "up" then
+    vim.notify(direction .. " is not a valid direction")
+  end
+  vim.fn.timer_start(0, function()
+    local fwin = opts.signature.fwin
+    if not (fwin and vim.api.nvim_win_is_valid(fwin)) then
+      return
+    end
+
+    if direction == "down" then
+      vim.api.nvim_win_call(fwin, function()
+        local last_lnum = vim.api.nvim_buf_line_count(opts.signature.fbuf)
+
+        local last_col = vim.fn.col({ last_lnum, "$" }) - 1
+        if last_col < 1 then
+          last_col = 1
+        end
+
+        local pos = vim.fn.screenpos(opts.signature.fwin, last_lnum, last_col)
+        if pos ~= nil and pos.row ~= 0 then
+          return
+        end
+
+        local keys = vim.api.nvim_replace_termcodes(opts.keys, true, false, true)
+        vim.cmd("normal! " .. keys)
+      end)
+    else
+      vim.api.nvim_win_call(fwin, function()
+        local pos = vim.fn.screenpos(opts.signature.fwin, 1, 1)
+        if pos ~= nil and pos.row ~= 0 then
+          return
+        end
+
+        local keys = vim.api.nvim_replace_termcodes(opts.keys, true, false, true)
+        vim.cmd("normal! " .. keys)
+      end)
+    end
+  end)
+end
+
 function M.add_signature_mappings(signature)
   signature:add_mapping(
     "sig_next",
@@ -55,6 +97,18 @@ function M.add_signature_mappings(signature)
     settings.current.keymaps.previous_parameter,
     modify_signature,
     { signature = signature, sig_modifier = 0, param_modifier = -1 }
+  )
+  signature:add_mapping(
+    "scroll_docs_down",
+    settings.current.keymaps.scroll_docs_down,
+    scroll_docs,
+    { signature = signature, keys = "<C-e>", direction = "down" }
+  )
+  signature:add_mapping(
+    "scroll_docs_up",
+    settings.current.keymaps.scroll_docs_up,
+    scroll_docs,
+    { signature = signature, keys = "<C-y>", direction = "up" }
   )
   signature:add_mapping("close", settings.current.keymaps.close_signature, close_signature, { signature = signature })
 end
