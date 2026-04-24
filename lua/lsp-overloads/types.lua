@@ -1,0 +1,57 @@
+--- LuaCATS type definitions for lsp-overloads.nvim.
+--- This file is purely for type annotations; it exports nothing at runtime.
+
+---@class lsp-overloads.UiConfig
+---@field border '"none"'|'"single"'|'"double"'|'"rounded"'|'"solid"'|'"shadow"' Border style for the popup
+---@field height integer? Fixed popup height (nil = auto)
+---@field width integer? Fixed popup width (nil = auto)
+---@field wrap boolean Wrap long lines
+---@field wrap_at string? Character position to wrap at when wrap=true
+---@field max_width integer? Maximum popup width
+---@field max_height integer? Maximum popup height
+---@field close_events string[] List of autocommand events that close the popup
+---@field focusable boolean Whether the popup window is focusable
+---@field focus boolean If true (and focusable=true), focus an existing popup with the same focus_id
+---@field offset_x integer Horizontal offset relative to the cursor
+---@field offset_y integer Vertical offset relative to the cursor
+---@field silent boolean Suppress "no signature" messages when true
+---@field floating_window_above_cur_line boolean Place popup above the current line when possible
+---@field zindex integer Z-index of the floating window (higher = more on top)
+---@field highlight table? Highlight options for LspSignatureActiveParameter
+
+---@class lsp-overloads.KeymapConfig
+---@field next_signature string? Keymap to cycle to the next overload
+---@field previous_signature string? Keymap to cycle to the previous overload
+---@field next_parameter string? Keymap to move to the next parameter
+---@field previous_parameter string? Keymap to move to the previous parameter
+---@field close_signature string? Keymap to close the signature popup
+---@field scroll_down string? Keymap to scroll down inside the signature popup
+---@field scroll_up string? Keymap to scroll up inside the signature popup
+
+---@class lsp-overloads.Config
+---@field ui lsp-overloads.UiConfig UI display options
+---@field keymaps lsp-overloads.KeymapConfig Buffer-local keymaps active while the popup is open
+---@field display_automatically boolean Auto-trigger on TextChangedI; false requires manual :LspOverloads signature
+---@field override_native_handler boolean Override vim.lsp.handlers["textDocument/signatureHelp"] (default true)
+---@field silent boolean Suppress informational vim.notify messages globally
+---@field log_level '"debug"'|'"info"'|'"warn"'|'"error"' Logging threshold
+
+---@class lsp-overloads.SignatureContent
+---@field contents string[]? Rendered markdown lines for the popup
+---@field active_hl integer[]? [start_col, end_col] of the active parameter highlight
+---@field label_line integer 0-based line index of the signature label (for highlight)
+
+---@class lsp-overloads.SignatureState
+---@field signatures table[] Raw SignatureInformation[] from the LSP response
+---@field activeSignature integer 0-based index of the active (visible) signature
+---@field activeParameter integer? 0-based index of the active parameter
+---@field err any LSP error (usually nil)
+---@field ctx table LSP context (method, client_id, bufnr, etc.)
+---@field config table Options forwarded to open_floating_preview
+---@field mode string Vim mode at the time the popup was created
+---@field bufnr integer Buffer number where the popup was triggered
+---@field fwin integer? Floating window handle
+---@field fbuf integer? Floating buffer handle
+---@field content lsp-overloads.SignatureContent Rendered popup content
+---@field _buf_mappings table<string, string> name→lhs of mappings added by the plugin
+---@field _original_mappings table<string, table> lhs→maparg dict of the user's original mappings

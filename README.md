@@ -18,152 +18,250 @@ https://user-images.githubusercontent.com/19861614/177287518-c3ea1d15-75b7-4abc-
 
 - Native LSP signatureHelper handler doesn't provide an easy way to view all the possible overloads and parameter details for signatures
 - Other Neovim LSP plugins either don't support method overloads in the signatureHelper popup view, or don't focus specifically on method overloads
-and are therefore lacking in the functionality I wanted from handling multiple signatures
+  and are therefore lacking in the functionality I wanted from handling multiple signatures
 
 ## Requirements
 
-- Neovim ≥ 0.7.0
+- Neovim ≥ 0.11
 
 ## Installation
 
-Install the plugin with the package manager of choice:
-
 ```lua
---Packer
-use { 'Issafalcon/lsp-overloads.nvim'}
+-- lazy.nvim
+{
+  "Issafalcon/lsp-overloads.nvim",
+  event = "LspAttach",
+}
+
+-- packer.nvim
+use { "Issafalcon/lsp-overloads.nvim" }
 ```
 
 ## Configuration
 
-Within your custom `on-attach` function that you provide as part of the options to the LSP server, setup the plugin, which will override 
-the built-in `signatureHelper` LSP handler:
+Call `setup()` once in your Neovim config. The plugin automatically attaches to any LSP client that provides
+`signatureHelpProvider` via a `LspAttach` autocommand — no per-server `on_attach` wiring required.
 
-<p>
-<details>
-<summary style='cursor: pointer'><b>Example without option overrides</b></summary>
+### Minimal setup (all defaults)
 
 ```lua
-  --- Guard against servers without the signatureHelper capability
-  if client.server_capabilities.signatureHelpProvider then
-    require('lsp-overloads').setup(client, { })
-  end
+require("lsp-overloads").setup()
 ```
 
-</details>
-</p>
-
-<p>
-<details>
-<summary style='cursor: pointer'><b>Example with option overrides (defaults shown)</b></summary>
+### Full setup with all options
 
 ```lua
-  --- Guard against servers without the signatureHelper capability
-  if client.server_capabilities.signatureHelpProvider then
-    require('lsp-overloads').setup(client, {
-        -- UI options are mostly the same as those passed to vim.lsp.util.open_floating_preview
-        ui = {
-          border = "single"           -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
-          height = nil,               -- Height of the signature popup window (nil allows dynamic sizing based on content of the help)
-          width = nil,                -- Width of the signature popup window (nil allows dynamic sizing based on content of the help)
-          wrap = true,                -- Wrap long lines
-          wrap_at = nil,              -- Character to wrap at for computing height when wrap enabled
-          max_width = nil,            -- Maximum signature popup width
-          max_height = nil,           -- Maximum signature popup height
-          -- Events that will close the signature popup window: use {"CursorMoved", "CursorMovedI", "InsertCharPre"} to hide the window when typing
-          close_events = { "CursorMoved", "BufHidden", "InsertLeave" },
-          focusable = true,           -- Make the popup float focusable
-          focus = false,              -- If focusable is also true, and this is set to true, navigating through overloads will focus into the popup window (probably not what you want)
-          offset_x = 0,               -- Horizontal offset of the floating window relative to the cursor position
-          offset_y = 0,                -- Vertical offset of the floating window relative to the cursor position
-          floating_window_above_cur_line = false, -- Attempt to float the popup above the cursor position 
-                                                 -- (note, if the height of the float would be greater than the space left above the cursor, it will default 
-                                                 -- to placing the float below the cursor. The max_height option allows for finer tuning of this)
-          silent = true,               -- Prevents noisy notifications (make false to help debug why signature isn't working)
-          -- Highlight options is null by default, but this just shows an example of how it can be used to modify the LspSignatureActiveParameter highlight property
-          highlight = {
-            italic = true,
-            bold = true,
-            fg = "#ffffff",
-            ... -- Other options accepted by the `val` parameter of vim.api.nvim_set_hl()
-          }
-        },
-        keymaps = {
-          next_signature = "<C-j>",
-          previous_signature = "<C-k>",
-          next_parameter = "<C-l>",
-          previous_parameter = "<C-h>",
-          close_signature = "<A-s>"
-        },
-        display_automatically = true -- Uses trigger characters to automatically display the signature overloads when typing a method signature
-      })
-  end
+require("lsp-overloads").setup({
+  -- UI options — mostly match vim.lsp.util.open_floating_preview
+  ui = {
+    border = "single",        -- border style: "none","single","double","rounded","solid","shadow"
+    height = nil,             -- nil = auto-size
+    width = nil,              -- nil = auto-size
+    wrap = true,
+    wrap_at = nil,
+    max_width = nil,
+    max_height = nil,
+    close_events = { "CursorMoved", "BufHidden", "InsertLeave" },
+    focusable = true,
+    focus = false,
+    offset_x = 0,
+    offset_y = 0,
+    silent = true,            -- suppress "No signature help" messages
+    floating_window_above_cur_line = false,
+    zindex = 50,              -- z-index of the floating window
+  },
+  keymaps = {
+    next_signature     = "<C-j>",
+    previous_signature = "<C-k>",
+    next_parameter     = "<C-l>",
+    previous_parameter = "<C-h>",
+    close_signature    = "<A-s>",
+    scroll_down        = "<C-d>",   -- scroll the popup window down
+    scroll_up          = "<C-u>",   -- scroll the popup window up
+  },
+  display_automatically    = true,  -- show popup on trigger characters automatically
+  override_native_handler  = true,  -- replace vim.lsp.handlers["textDocument/signatureHelp"]
+  log_level                = "warn",
+})
 ```
 
-</details>
-</p>
+### Manual `on_attach` (fine-grained control)
+
+If you prefer to control exactly which buffers the plugin attaches to, set `override_native_handler = false` and
+call `on_attach` yourself:
+
+```lua
+require("lsp-overloads").setup({ override_native_handler = false })
+
+-- Inside your LSP on_attach:
+local function on_attach(client, bufnr)
+  if client.server_capabilities.signatureHelpProvider then
+    require("lsp-overloads").on_attach(client, bufnr)
+  end
+end
+```
+
+---
+
+## Migration from v1.x
+
+The old API `require("lsp-overloads").setup(client, config)` (client as first arg) is no longer supported.
+
+| Old (v1.x)                                     | New (v2.x)                              |
+| ---------------------------------------------- | --------------------------------------- |
+| `setup(client, config)` inside `on_attach`     | `setup(config)` once at startup         |
+| Manual attach loop in every server             | Automatic via `LspAttach` autocmd       |
+| `:LspOverloadsSignature`                       | `:LspOverloads signature`               |
+| `:LspOverloadsSignatureAutoToggle`             | `:LspOverloads toggle`                  |
+| No scroll keymaps                              | `scroll_down` / `scroll_up` (new)       |
+| No `zindex` option                             | `ui.zindex` (new, default 50)           |
+
+---
 
 ## Usage
 
-LSP trigger characters will cause the signature popup to be displayed. If there are any overloads, the popup will indicate this is the case and
-you will be able to navigate between the overloads.
+### Triggering the Signature Popup
 
-Regardless of whether or not overloads exist, you will also be able to navigate between the parameters which will change the content of the signature popup to display
-the details of the highlighted parameter.
+LSP trigger characters (typically `(` and `,`) will automatically display the signature popup when
+`display_automatically = true` (the default).
 
-### Triggering Signature Overload and Parameters
-❗**NOTE:** 
-- In order to allow the mappings to function correctly, you will need to create mappings for the specific buffer that your LSP client is attached to. Therefore, the mapping below should all be created
-  within the custom `on_attach` function of the LSP-server.
+To trigger manually from any mode, use the command:
 
-To trigger the lsp-overloads signature popup manually when in normal mode, you can create the following mapping, as an example:
-```
-  -- Inside the on_attach function (which passes in 'client' and 'bufnr' params)
-  ...
-  if client.server_capabilities.signatureHelpProvider then
-    vim.api.nvim_set_keymap("n", "<A-s>", ":LspOverloadsSignature<CR>", { noremap = true, silent = true, buffer = bufnr })
-  end
+```vim
+:LspOverloads signature
 ```
 
-It is also useful to create the corresponding trigger mapping for insert mode too (helps when toggling the popup while in insert mode)
-```
-  -- Inside the on_attach function (which passes in 'client' and 'bufnr' params)
-  ...
-  if client.server_capabilities.signatureHelpProvider then
-    vim.api.nvim_set_keymap("i", "<A-s>", "<cmd>LspOverloadsSignature<CR>", { noremap = true, silent = true, buffer = bufnr })
-  end
+Or map it to a key:
+
+```lua
+vim.keymap.set({ "n", "i" }, "<A-s>", "<cmd>LspOverloads signature<CR>", { silent = true })
 ```
 
-Closing the popup while typing can be done using the pre-configured `close_signature` keybind created when the signature window is created (see [Keybinds](#keybinds))
-- It is recommended to override this to match the keybind you use to trigger the overload popup manually, so toggling is more intuitive
+### Toggling Automatic Display
 
-#### Toggling automatic display
-lsp-overloads automatically shows itself by default when you are inside of a function signature and begin typing.
-You can toggle this feature using 
+```vim
+:LspOverloads toggle
 ```
-:LspOverloadsSignatureAutoToggle
+
+Or set `display_automatically = false` in your config to disable automatic display entirely.
+
+### Keybinds (active while popup is open)
+
+These keymaps are installed buffer-locally while the signature popup is visible, then removed or
+restored to your original bindings when the popup closes.
+
+| Key     | Action                         |
+| ------- | ------------------------------ |
+| `<C-j>` | Next overload signature        |
+| `<C-k>` | Previous overload signature    |
+| `<C-l>` | Next parameter                 |
+| `<C-h>` | Previous parameter             |
+| `<A-s>` | Close popup                    |
+| `<C-d>` | Scroll popup down              |
+| `<C-u>` | Scroll popup up                |
+
+All keys are configurable via the `keymaps` table in `setup()`.
+
+---
+
+## Health Check
+
+Run `:checkhealth lsp-overloads` to verify:
+- Neovim version compatibility
+- Whether the native handler override is installed
+- Conflicting plugins that may cause duplicate popups
+
+---
+
+## Preventing Conflicting Signature Popups
+
+Neovim 0.10+ and several plugins also hook into `textDocument/signatureHelp`. Having multiple handlers
+active at once causes duplicate (or stacked) signature popups.
+
+### Native Neovim handler
+
+By default (`override_native_handler = true`), lsp-overloads replaces the native
+`vim.lsp.handlers["textDocument/signatureHelp"]` on startup. This is the recommended setting.
+
+If you explicitly want to keep the native handler, set `override_native_handler = false` and remove
+the native handler yourself:
+
+```lua
+vim.lsp.handlers["textDocument/signatureHelp"] = nil  -- disable native popup
+require("lsp-overloads").setup({ override_native_handler = false })
+-- then call on_attach() manually per buffer
 ```
-You can disable this automatic triggering of lsp-overloads by setting 'display_automatically' to false as part of the config.
 
-### Keybinds
-The default mappings are used to navigate between various signature overloads and parameters when the signature popup is displayed:
-- `next_signature = "<C-j>"`
-- `previous_signature = "<C-k>"`
-- `next_parameter = "<C-l>"`
-- `previous_parameter = "<C-h>"`
-- `close_signature = "<A-s>"`
+### noice.nvim
 
-**NOTE: If you already have a keybinding that matches one of the above, it will only get overwritten when the signature popup is open. When the popup is closed, your original keybinding will be restored in the buffer. If you still need to keep your original mappings while the signature popup is open, you will need to modify these bindings so they no longer conflict** 
+`noice.nvim` intercepts `textDocument/signatureHelp` by default. To route it to lsp-overloads instead:
 
-### Additional Tips
+```lua
+require("noice").setup({
+  lsp = {
+    signature = {
+      enabled = false,  -- disable noice's signature handler
+    },
+  },
+})
+require("lsp-overloads").setup()
+```
 
-- Any calls to `vim.lsp.buf.signature_help()` made while the plugin's signature popup is displayed, will behave
-in the same way as the built-in signature popup (i.e. When `focusable` set to true Cursor will enter the popup in normal mode, allowing scrolling behaviour)
+### lsp_signature.nvim
 
-- If signatures aren't showing up when you expect them to, try setting `silent` to false. If you then see a popup that states `No signature help found`, then at least you know it's probably the LSP that isn't returning the signature help.
+Do not load both `lsp_signature.nvim` and `lsp-overloads.nvim` at the same time — they both override
+the same global handler. Remove or disable `lsp_signature.nvim` if you use lsp-overloads.
+
+### nvim-cmp
+
+`nvim-cmp` has its own `cmp.config.sources` for signature help (`cmp-nvim-lsp-signature-help`). Disable
+that source if it conflicts:
+
+```lua
+require("cmp").setup({
+  sources = cmp.config.sources({
+    { name = "nvim_lsp" },
+    -- Remove or comment out: { name = "nvim_lsp_signature_help" }
+  }),
+})
+```
+
+### blink.cmp
+
+In `blink.cmp`, disable the built-in signature popup:
+
+```lua
+require("blink.cmp").setup({
+  signature = { enabled = false },
+})
+```
+
+### Neovim 0.11+ `vim.lsp.config`
+
+If you configure LSP servers via the new `vim.lsp.config` API, lsp-overloads' global handler override
+takes effect automatically. No per-server wiring is needed.
+
+---
+
+## Debugging
+
+If signatures aren't appearing when expected:
+
+1. Set `ui.silent = false` in your config — the plugin will log "No signature help available" to the
+   messages area, confirming the LSP response is empty rather than a plugin issue.
+2. Run `:checkhealth lsp-overloads` to verify the handler is installed.
+3. Confirm the LSP client reports `signatureHelpProvider` capability:
+   ```lua
+   :lua vim.print(vim.lsp.get_clients({ bufnr = 0 })[1].server_capabilities.signatureHelpProvider)
+   ```
+
+---
 
 ## Credits
 
-- [omnisharp-vim](https://github.com/OmniSharp/omnisharp-vim/blob/master/autoload/OmniSharp/actions/signature.vim) - For providing the approach that I used to handle the signature overloads and keymappings
-- [lsp_signature.nvim](https://github.com/ray-x/lsp_signature.nvim) - The fully featured LSP signature enhancement plugin that I took inspiration from for this plugin
-- [seblj dotfiles](https://github.com/seblj/dotfiles/blob/master/nvim/lua/config/lspconfig/signature.lua) - The starter code I used in this plugin to kick off the signature request
-- [Neovim core codebase](https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382) - The handler code that has been modified for this plugin
+- [omnisharp-vim](https://github.com/OmniSharp/omnisharp-vim/blob/master/autoload/OmniSharp/actions/signature.vim) — original approach for signature overloads and keymappings
+- [lsp_signature.nvim](https://github.com/ray-x/lsp_signature.nvim) — inspiration
+- [seblj dotfiles](https://github.com/seblj/dotfiles/blob/master/nvim/lua/config/lspconfig/signature.lua) — starter code
+- [Neovim core codebase](https://github.com/neovim/neovim/blob/1a20aed3fb35e00f96aa18abb69d35912c9e119d/runtime/lua/vim/lsp/handlers.lua#L382) — original handler logic
+- [lumen-oss/nvim-best-practices](https://github.com/lumen-oss/nvim-best-practices) — structural best-practices guide
+- [ColinKennedy/nvim-best-practices-plugin-template](https://github.com/ColinKennedy/nvim-best-practices-plugin-template) — plugin template reference
