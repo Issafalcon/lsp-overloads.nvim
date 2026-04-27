@@ -29,7 +29,16 @@ function M.setup(state)
       local swapping = vim.F.npcall(vim.api.nvim_buf_get_var, bufnr, "lsp_overloads_swapping")
       local is_cycling = swapping ~= nil and swapping == fwin
 
-      if not is_cycling then
+      -- Guard against the async case: if open_floating_preview already closed
+      -- this window and created a newer replacement, the lsp_floating_preview
+      -- buffer variable will point to a *different* (still-valid) window.
+      -- Removing keymaps in that situation would strip the new popup's bindings.
+      local current_lsp_float = vim.F.npcall(vim.api.nvim_buf_get_var, bufnr, "lsp_floating_preview")
+      local has_newer_float = current_lsp_float
+        and vim.api.nvim_win_is_valid(current_lsp_float)
+        and current_lsp_float ~= fwin
+
+      if not is_cycling and not has_newer_float then
         local sig_mod = require("lsp-overloads._lsp.signature")
         local map_mod = require("lsp-overloads._lsp.mappings")
         map_mod.remove(state)

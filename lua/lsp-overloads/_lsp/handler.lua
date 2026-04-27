@@ -95,6 +95,12 @@ end
 --- Request signature help for the current cursor position.
 --- Called by the TextChangedI autocmd and the :LspOverloads signature command.
 ---
+--- NOTE: We intentionally avoid vim.lsp.buf.signature_help() here.  In Neovim
+--- 0.12 that function was rewritten to aggregate results inline (never calling
+--- the registered handler) and adds a native <C-s>-cycling float.  We bypass
+--- it entirely and drive the request through buf_request_all() so that our own
+--- M.handler() always runs.
+---
 ---@param bypass_trigger boolean? If true, skip trigger-character checking (manual invocation)
 function M.open_signature(bypass_trigger)
   local bufnr = vim.api.nvim_get_current_buf()
@@ -112,11 +118,12 @@ function M.open_signature(bypass_trigger)
   end
 
   local triggered = bypass_trigger or false
+  local line_to_cursor = ""
 
   if not triggered then
     local pos = vim.api.nvim_win_get_cursor(0)
     local line = vim.api.nvim_get_current_line()
-    local line_to_cursor = line:sub(1, pos[2])
+    line_to_cursor = line:sub(1, pos[2])
 
     for _, client in ipairs(clients) do
       local triggers = vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters")
@@ -129,6 +136,12 @@ function M.open_signature(bypass_trigger)
         break
       end
     end
+
+    -- Also re-trigger when the cursor is already inside a call so parameter
+    -- highlighting tracks each keystroke the user types.
+    if not triggered then
+      triggered = M.check_inside_call(line_to_cursor)
+    end
   end
 
   if not triggered then
@@ -136,7 +149,10 @@ function M.open_signature(bypass_trigger)
   end
 
   local cfg = configuration.current
-  vim.lsp.buf.signature_help({
+  -- Build the config that will be forwarded to our handler (and on to
+  -- open_floating_preview).  focus_id groups the window so Neovim can reuse
+  -- the same float rather than stacking multiple ones.
+  local req_config = {
     border = cfg.ui.border,
     silent = cfg.ui.silent,
     height = cfg.ui.height,
@@ -152,7 +168,27 @@ function M.open_signature(bypass_trigger)
     close_events = cfg.ui.close_events,
     floating_window_above_cur_line = cfg.ui.floating_window_above_cur_line,
     zindex = cfg.ui.zindex,
-  })
+    focus_id = "textDocument/signatureHelp",
+  }
+
+  -- Use make_position_params from the first capable client for compatibility
+  -- across Neovim versions (0.11 buf_request_all expects a table, not a fn).
+  local params = vim.lsp.util.make_position_params(0, clients[1].offset_encoding)
+
+  vim.lsp.buf_request_all(bufnr, "textDocument/signatureHelp", params, function(results)
+    for client_id, r in pairs(results) do
+      if not r.err and r.result and r.result.signatures and #r.result.signatures > 0 then
+        local ctx = {
+          method = "textDocument/signatureHelp",
+          client_id = client_id,
+          bufnr = bufnr,
+        }
+        M.handler(r.err, r.result, ctx, req_config)
+        -- Use the first successful result only
+        return
+      end
+    end
+  end)
 end
 
 return M

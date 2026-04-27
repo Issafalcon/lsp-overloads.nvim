@@ -9,6 +9,10 @@ local configuration = require("lsp-overloads._core.configuration")
 
 local M = {}
 
+-- The mode used for all signature-navigation keymaps.
+-- Insert mode is the primary context: the user is typing arguments.
+local _KEYMAP_MODE = "i"
+
 --- Add a buffer-local keymap for signature navigation.
 --- Stores the original keymap so it can be restored on popup close.
 ---
@@ -26,20 +30,19 @@ function M.add(state, map_name, lhs, rhs)
   end
 
   local bufnr = state.bufnr
-  local mode = state.mode
 
   -- Save original mapping so we can restore it later
   if state._original_mappings[lhs] == nil then
     -- Use nvim_buf_call to ensure buffer-local mappings are found correctly
     local existing = vim.api.nvim_buf_call(bufnr, function()
-      return vim.fn.maparg(lhs, mode, false, true)
+      return vim.fn.maparg(lhs, _KEYMAP_MODE, false, true)
     end)
     if existing and existing.lhs then
       state._original_mappings[lhs] = existing
     end
   end
 
-  vim.keymap.set(mode, lhs, function()
+  vim.keymap.set(_KEYMAP_MODE, lhs, function()
     rhs(state)
   end, { buffer = bufnr, nowait = true, silent = true, desc = "lsp-overloads: " .. map_name })
 
@@ -51,7 +54,6 @@ end
 ---@param state lsp-overloads.SignatureState
 function M.remove(state)
   local bufnr = state.bufnr
-  local mode = state.mode
 
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     state._buf_mappings = {}
@@ -61,7 +63,7 @@ function M.remove(state)
 
   for _, lhs in pairs(state._buf_mappings) do
     -- Remove the plugin's mapping (silently, to guard against race conditions)
-    pcall(vim.keymap.del, mode, lhs, { buffer = bufnr })
+    pcall(vim.keymap.del, _KEYMAP_MODE, lhs, { buffer = bufnr })
 
     -- Restore the original mapping if one was saved
     local original = state._original_mappings[lhs]
@@ -76,9 +78,9 @@ function M.remove(state)
       }
       local callback = original.callback
       if callback then
-        vim.keymap.set(original.mode or mode, original.lhs, callback, restore_opts)
+        vim.keymap.set(original.mode or _KEYMAP_MODE, original.lhs, callback, restore_opts)
       elseif original.rhs and original.rhs ~= "" then
-        vim.keymap.set(original.mode or mode, original.lhs, original.rhs, restore_opts)
+        vim.keymap.set(original.mode or _KEYMAP_MODE, original.lhs, original.rhs, restore_opts)
       end
       state._original_mappings[lhs] = nil
     end
@@ -95,49 +97,47 @@ end
 function M.setup(state, modify_fn, close_fn)
   local km = configuration.current.keymaps
 
+  -- Cycle overloads/parameters directly (no timer): calling modify_fn
+  -- synchronously from insert mode is safe and avoids the timer race
+  -- where the popup could close between keypress and deferred callback.
   M.add(state, "sig_next", km.next_signature, function(s)
-    vim.fn.timer_start(0, function()
-      modify_fn(s, { sig_modifier = 1, param_modifier = 0 })
-    end)
+    modify_fn(s, { sig_modifier = 1, param_modifier = 0 })
   end)
 
   M.add(state, "sig_prev", km.previous_signature, function(s)
-    vim.fn.timer_start(0, function()
-      modify_fn(s, { sig_modifier = -1, param_modifier = 0 })
-    end)
+    modify_fn(s, { sig_modifier = -1, param_modifier = 0 })
   end)
 
   M.add(state, "param_next", km.next_parameter, function(s)
-    vim.fn.timer_start(0, function()
-      modify_fn(s, { sig_modifier = 0, param_modifier = 1 })
-    end)
+    modify_fn(s, { sig_modifier = 0, param_modifier = 1 })
   end)
 
   M.add(state, "param_prev", km.previous_parameter, function(s)
-    vim.fn.timer_start(0, function()
-      modify_fn(s, { sig_modifier = 0, param_modifier = -1 })
-    end)
+    modify_fn(s, { sig_modifier = 0, param_modifier = -1 })
   end)
 
   M.add(state, "close", km.close_signature, function(s)
-    vim.fn.timer_start(0, function()
-      close_fn(s)
-    end)
+    close_fn(s)
   end)
 
-  -- Scroll keymaps operate directly on the floating window buffer
+  -- Scroll the floating window.  nvim_win_call makes fwin the active window
+  -- for the duration of the callback so :normal! operates on the float.
+  -- "\4" and "\21" are the literal Ctrl-D / Ctrl-U control characters that
+  -- :normal! requires (string key names like "<C-d>" are NOT expanded there).
   M.add(state, "scroll_down", km.scroll_down, function(s)
     if s.fwin and vim.api.nvim_win_is_valid(s.fwin) then
+      local count = math.max(1, math.floor(vim.api.nvim_win_get_height(s.fwin) / 2))
       vim.api.nvim_win_call(s.fwin, function()
-        vim.cmd("normal! " .. math.max(1, math.floor(vim.api.nvim_win_get_height(s.fwin) / 2)) .. "<C-d>")
+        vim.cmd("normal! " .. count .. "\4")
       end)
     end
   end)
 
   M.add(state, "scroll_up", km.scroll_up, function(s)
     if s.fwin and vim.api.nvim_win_is_valid(s.fwin) then
+      local count = math.max(1, math.floor(vim.api.nvim_win_get_height(s.fwin) / 2))
       vim.api.nvim_win_call(s.fwin, function()
-        vim.cmd("normal! " .. math.max(1, math.floor(vim.api.nvim_win_get_height(s.fwin) / 2)) .. "<C-u>")
+        vim.cmd("normal! " .. count .. "\21")
       end)
     end
   end)

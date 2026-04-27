@@ -47,10 +47,18 @@ function M.to_markdown_lines(signature_help, ft, triggers)
     vim.lsp.util.convert_input_to_markdown_lines(signature.documentation, contents)
   end
 
-  -- Overload count indicator
+  -- Overload count indicator with configured cycle keybinds
   if #signature_help.signatures > 1 then
+    local km_hint = ""
+    local ok, cfg = pcall(require, "lsp-overloads._core.configuration")
+    if ok then
+      local km = cfg.current.keymaps
+      if km.previous_signature and km.next_signature then
+        km_hint = string.format(" | %s/%s to cycle", km.previous_signature, km.next_signature)
+      end
+    end
     vim.list_extend(contents, {
-      ("(Overload %d of %d)"):format(active_signature + 1, #signature_help.signatures),
+      ("(Overload %d of %d%s)"):format(active_signature + 1, #signature_help.signatures, km_hint),
       "",
     })
   end
