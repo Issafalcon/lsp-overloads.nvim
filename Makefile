@@ -3,20 +3,22 @@
 
 all:
 
-PLENARY_PATH ?= /home/adam/.local/share/nvim/site/pack/core/opt/plenary.nvim
 SPEC_DIR     = spec/lsp_overloads
 INIT_FILE    = spec/minimal_init.lua
 
+.PHONY: all test deps test-ci documentation documentation-ci lint check-lint
+
 # runs all the test files using plenary busted runner.
-test:
+test: deps
 	nvim --version | head -n 1 && echo ''
 	nvim --headless --clean --noplugin -u $(INIT_FILE) \
 		-c "lua vim.cmd([[PlenaryBustedDirectory $(SPEC_DIR) { minimal_init = '$(INIT_FILE)' }]])"
 
-# installs test dependencies.
+# installs test dependencies into deps/ (always re-checks, skips if already cloned).
 deps:
 	@mkdir -p deps
-	git clone --depth 1 https://github.com/echasnovski/mini.doc.git deps/mini.doc.nvim 2>/dev/null || true
+	@[ -d deps/plenary ] || git clone --depth 1 https://github.com/nvim-lua/plenary.nvim deps/plenary
+	@[ -d deps/mini.doc.nvim ] || git clone --depth 1 https://github.com/echasnovski/mini.doc.git deps/mini.doc.nvim
 
 # installs deps before running tests, useful for the CI.
 test-ci: deps test
