@@ -14,6 +14,10 @@ for method overloads.
 
 https://user-images.githubusercontent.com/19861614/177287518-c3ea1d15-75b7-4abc-b5c9-6f99c83dd0e0.mp4
 
+> [!warning] V2 Breaking Changes
+> Due to a number of issues and updates in v0.12 of Neovim, this plugin has been dramatically overhauled and refactored with a number of breaking changes.
+> Read the guidance below for details
+
 ## Rationale
 
 - Native LSP signatureHelper handler doesn't provide an easy way to view all the possible overloads and parameter details for signatures
@@ -107,14 +111,14 @@ end
 
 The old API `require("lsp-overloads").setup(client, config)` (client as first arg) is no longer supported.
 
-| Old (v1.x)                                     | New (v2.x)                              |
-| ---------------------------------------------- | --------------------------------------- |
-| `setup(client, config)` inside `on_attach`     | `setup(config)` once at startup         |
-| Manual attach loop in every server             | Automatic via `LspAttach` autocmd       |
-| `:LspOverloadsSignature`                       | `:LspOverloads signature`               |
-| `:LspOverloadsSignatureAutoToggle`             | `:LspOverloads toggle`                  |
-| No scroll keymaps                              | `scroll_down` / `scroll_up` (new)       |
-| No `zindex` option                             | `ui.zindex` (new, default 50)           |
+| Old (v1.x)                                 | New (v2.x)                        |
+| ------------------------------------------ | --------------------------------- |
+| `setup(client, config)` inside `on_attach` | `setup(config)` once at startup   |
+| Manual attach loop in every server         | Automatic via `LspAttach` autocmd |
+| `:LspOverloadsSignature`                   | `:LspOverloads signature`         |
+| `:LspOverloadsSignatureAutoToggle`         | `:LspOverloads toggle`            |
+| No scroll keymaps                          | `scroll_down` / `scroll_up` (new) |
+| No `zindex` option                         | `ui.zindex` (new, default 50)     |
 
 ---
 
@@ -150,15 +154,15 @@ Or set `display_automatically = false` in your config to disable automatic displ
 These keymaps are installed buffer-locally while the signature popup is visible, then removed or
 restored to your original bindings when the popup closes.
 
-| Key     | Action                         |
-| ------- | ------------------------------ |
-| `<C-j>` | Next overload signature        |
-| `<C-k>` | Previous overload signature    |
-| `<C-l>` | Next parameter                 |
-| `<C-h>` | Previous parameter             |
-| `<A-s>` | Close popup                    |
-| `<C-d>` | Scroll popup down              |
-| `<C-u>` | Scroll popup up                |
+| Key     | Action                      |
+| ------- | --------------------------- |
+| `<C-j>` | Next overload signature     |
+| `<C-k>` | Previous overload signature |
+| `<C-l>` | Next parameter              |
+| `<C-h>` | Previous parameter          |
+| `<A-s>` | Close popup                 |
+| `<C-d>` | Scroll popup down           |
+| `<C-u>` | Scroll popup up             |
 
 All keys are configurable via the `keymaps` table in `setup()`.
 
@@ -167,6 +171,7 @@ All keys are configurable via the `keymaps` table in `setup()`.
 ## Health Check
 
 Run `:checkhealth lsp-overloads` to verify:
+
 - Neovim version compatibility
 - Whether the native handler override is installed
 - Conflicting plugins that may cause duplicate popups
