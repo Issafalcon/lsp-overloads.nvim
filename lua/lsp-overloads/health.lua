@@ -26,13 +26,10 @@ local function check_handler()
     if source:find("lsp-overloads", 1, true) then
       vim.health.ok("lsp-overloads handler is installed as the global signatureHelp handler")
     else
-      vim.health.warn(
-        "A signatureHelp handler is installed but it does not appear to be lsp-overloads",
-        {
-          "If you called setup() with override_native_handler=true (the default), this should resolve itself.",
-          "If you have another plugin (e.g. noice.nvim) overriding this handler after setup(), see the README.",
-        }
-      )
+      vim.health.warn("A signatureHelp handler is installed but it does not appear to be lsp-overloads", {
+        "If you called setup() with override_native_handler=true (the default), this should resolve itself.",
+        "If you have another plugin (e.g. noice.nvim) overriding this handler after setup(), see the README.",
+      })
     end
   else
     vim.health.warn(

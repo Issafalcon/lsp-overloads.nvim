@@ -23,12 +23,14 @@ function M.create(name, subcommands, opts)
     local args = #fargs > 1 and vim.list_slice(fargs, 2, #fargs) or {}
     local subcommand = subcommands[subcommand_key]
     if not subcommand then
-      error(string.format(
-        "Unknown subcommand %q for %s. Available: %s",
-        subcommand_key,
-        name,
-        table.concat(vim.tbl_keys(subcommands), ", ")
-      ))
+      error(
+        string.format(
+          "Unknown subcommand %q for %s. Available: %s",
+          subcommand_key,
+          name,
+          table.concat(vim.tbl_keys(subcommands), ", ")
+        )
+      )
     end
     subcommand.impl(args, cmd_opts)
   end
@@ -43,7 +45,8 @@ function M.create(name, subcommands, opts)
     end
     -- Otherwise complete subcommand names
     if cmdline:match("^['<,'>]*" .. name .. "[!]*%s+%w*$") then
-      return vim.iter(vim.tbl_keys(subcommands))
+      return vim
+        .iter(vim.tbl_keys(subcommands))
         :filter(function(key)
           return key:find(arg_lead) ~= nil
         end)
@@ -52,11 +55,15 @@ function M.create(name, subcommands, opts)
     return {}
   end
 
-  vim.api.nvim_create_user_command(name, dispatch, vim.tbl_extend("force", {
-    nargs = "+",
-    desc = name .. " command",
-    complete = complete,
-  }, opts))
+  vim.api.nvim_create_user_command(
+    name,
+    dispatch,
+    vim.tbl_extend("force", {
+      nargs = "+",
+      desc = name .. " command",
+      complete = complete,
+    }, opts)
+  )
 end
 
 return M

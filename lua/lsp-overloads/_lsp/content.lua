@@ -117,7 +117,8 @@ end
 ---@return lsp-overloads.SignatureContent
 function M.render(state)
   local client = vim.lsp.get_client_by_id(state.ctx.client_id)
-  local triggers = client and vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters") or {}
+  local triggers = client and vim.tbl_get(client.server_capabilities, "signatureHelpProvider", "triggerCharacters")
+    or {}
   local ft = state.ctx.bufnr and vim.bo[state.ctx.bufnr].filetype or nil
 
   local contents, active_hl = M.to_markdown_lines(state, ft, triggers)

@@ -107,7 +107,8 @@ function M.open_signature(bypass_trigger)
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
 
   -- Filter to clients that provide signature help
-  clients = vim.iter(clients)
+  clients = vim
+    .iter(clients)
     :filter(function(c)
       return vim.tbl_get(c, "server_capabilities", "signatureHelpProvider") ~= nil
     end)
