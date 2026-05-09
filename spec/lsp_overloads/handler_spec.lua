@@ -10,22 +10,12 @@ describe("handler.handler()", function()
 
   -- The handler guards on result==nil, not on err
   it("returns nil when result is nil", function()
-    local result = handler.handler(
-      nil,
-      nil,
-      { client_id = 1, bufnr = 1, method = "textDocument/signatureHelp" },
-      {}
-    )
+    local result = handler.handler(nil, nil, { client_id = 1, bufnr = 1, method = "textDocument/signatureHelp" }, {})
     assert.is_nil(result)
   end)
 
   it("returns nil when signatures table is missing", function()
-    local result = handler.handler(
-      nil,
-      {},
-      { client_id = 1, bufnr = 1, method = "textDocument/signatureHelp" },
-      {}
-    )
+    local result = handler.handler(nil, {}, { client_id = 1, bufnr = 1, method = "textDocument/signatureHelp" }, {})
     assert.is_nil(result)
   end)
 
@@ -42,7 +32,13 @@ describe("handler.handler()", function()
   it("does not crash when result is nil and silent=false", function()
     -- Direct field assignment to avoid any tbl_deep_extend edge cases with bool false
     configuration.current.ui.silent = false
-    local ok, err = pcall(handler.handler, nil, nil, { client_id = 1, bufnr = 1, method = "textDocument/signatureHelp" }, {})
+    local ok, err = pcall(
+      handler.handler,
+      nil,
+      nil,
+      { client_id = 1, bufnr = 1, method = "textDocument/signatureHelp" },
+      {}
+    )
     assert.is_true(ok, tostring(err))
   end)
 
