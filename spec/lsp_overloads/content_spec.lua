@@ -56,7 +56,10 @@ describe("content.to_markdown_lines()", function()
     local help = make_help({
       signatures = {
         { label = "foo(a: string): void", parameters = { { label = "a: string" } } },
-        { label = "foo(a: string, b: number): void", parameters = { { label = "a: string" }, { label = "b: number" } } },
+        {
+          label = "foo(a: string, b: number): void",
+          parameters = { { label = "a: string" }, { label = "b: number" } },
+        },
       },
     })
     local lines, _ = content.to_markdown_lines(help, nil, nil)
