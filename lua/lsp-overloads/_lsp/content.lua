@@ -124,7 +124,9 @@ function M.render(state)
   local contents, active_hl = M.to_markdown_lines(state, ft, triggers)
 
   if contents then
-    contents = vim.lsp.util.trim_empty_lines(contents)
+    if type(contents) == "table" then
+      contents = vim.split(table.concat(contents, "\n"), "\n", { trimempty = true })
+    end
   end
 
   if not contents or vim.tbl_isempty(contents) then
