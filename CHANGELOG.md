@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v2.0.0...v2.0.1) (2026-05-10)
+
+
+### Bug Fixes
+
+* **ci:** Updating test matrix for supporte versions of nvim ([2b7c430](https://github.com/Issafalcon/lsp-overloads.nvim/commit/2b7c430b21715ef4e486ba26924b4b97070d41bc))
+
 ## [1.5.0](https://github.com/Issafalcon/lsp-overloads.nvim/compare/v1.4.1...v1.5.0) (2024-06-27)
 
 
