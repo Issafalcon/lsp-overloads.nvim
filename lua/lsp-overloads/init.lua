@@ -30,13 +30,19 @@ function M.setup(opts)
   -- Override the native handler globally so only lsp-overloads renders popups
   if configuration.current.override_native_handler then
     local handler = require("lsp-overloads._lsp.handler")
-    vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(handler.handler, {
-      border = configuration.current.ui.border,
-      silent = configuration.current.ui.silent,
-      close_events = configuration.current.ui.close_events,
-      focusable = configuration.current.ui.focusable,
-      focus = configuration.current.ui.focus,
-    })
+    vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
+      local options = {
+        border = configuration.current.ui.border,
+        silent = configuration.current.ui.silent,
+        close_events = configuration.current.ui.close_events,
+        focusable = configuration.current.ui.focusable,
+        focus = configuration.current.ui.focus,
+      }
+
+      local final_config = vim.tbl_deep_extend("force", options, config or {})
+
+      return handler.handler(err, result, ctx, final_config)
+    end
   end
 
   -- Auto-attach to every LSP client that supports signatureHelp
